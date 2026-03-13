@@ -1,0 +1,28 @@
+# Data Collection (Reddit via public RSS — no API key required)
+feedparser==6.0.11
+google-api-python-client==2.131.0
+pytrends==4.9.2
+httpx==0.27.0
+
+# Graph Orchestration (LangGraph Brain)
+langgraph>=0.2.0
+langchain-core>=0.2.0
+
+# NLP & Embeddings
+sentence-transformers==2.6.1
+
+# Graph Visualization
+networkx==3.3
+pyvis==0.3.2
+
+# Database
+tinydb==4.8.0
+
+# API
+fastapi==0.111.0
+uvicorn==0.29.0
+
+# Utilities
+python-dotenv==1.0.1
+schedule==1.2.2
+rich==13.7.1
