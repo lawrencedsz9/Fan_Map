@@ -9,3 +9,4 @@ build/
 venv/
 node_modules/
 dashboard/dist/
+lib/

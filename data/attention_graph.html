@@ -1,0 +1,174 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 100vh;
+                 background-color: #0a0a0a;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+    <style>
+        body {
+            margin: 0;
+            background: #0a0a0a;
+            font-family: 'Segoe UI', monospace;
+            overflow: hidden;
+        }
+        #title-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            border-bottom: 1px solid #333;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        #title-bar h1 {
+            color: #ff6b6b;
+            font-size: 18px;
+            margin: 0;
+        }
+        #title-bar span {
+            color: #888;
+            font-size: 13px;
+        }
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+    <div id="title-bar">
+        <div class="pulse"></div>
+        <h1>Fandom Intelligence Graph</h1>
+        <span>Real-Time Internet Attention Map</span>
+    </div>
+    
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Itachi", "label": "Itachi", "shape": "dot", "size": 15, "title": "\u003cb\u003eItachi\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#ff6b6b", "font": {"color": "#ffffff"}, "id": "Naruto", "label": "Naruto", "shape": "diamond", "size": 20, "title": "\u003cb\u003eNaruto\u003c/b\u003e\u003cbr\u003eType: Anime\u003cbr\u003eAttention Score: 0.185\u003cbr\u003eReddit: 3 mentions\u003cbr\u003eYouTube: 10 mentions"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Luffy", "label": "Luffy", "shape": "dot", "size": 15, "title": "\u003cb\u003eLuffy\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#ff6b6b", "font": {"color": "#ffffff"}, "id": "One Piece", "label": "One Piece", "shape": "diamond", "size": 20, "title": "\u003cb\u003eOne Piece\u003c/b\u003e\u003cbr\u003eType: Anime\u003cbr\u003eAttention Score: 0.197\u003cbr\u003eReddit: 4 mentions\u003cbr\u003eYouTube: 10 mentions"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Onepiece", "label": "Onepiece", "shape": "dot", "size": 15, "title": "\u003cb\u003eOnepiece\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Straw Hat", "label": "Straw Hat", "shape": "dot", "size": 15, "title": "\u003cb\u003eStraw Hat\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#45b7d1", "font": {"color": "#ffffff"}, "id": "Netflix", "label": "Netflix", "shape": "dot", "size": 20, "title": "\u003cb\u003eNetflix\u003c/b\u003e\u003cbr\u003eType: Platform"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Yuji", "label": "Yuji", "shape": "dot", "size": 15, "title": "\u003cb\u003eYuji\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#ff6b6b", "font": {"color": "#ffffff"}, "id": "Jujutsu Kaisen", "label": "Jujutsu Kaisen", "shape": "diamond", "size": 20, "title": "\u003cb\u003eJujutsu Kaisen\u003c/b\u003e\u003cbr\u003eType: Anime\u003cbr\u003eAttention Score: 0.197\u003cbr\u003eReddit: 4 mentions\u003cbr\u003eYouTube: 10 mentions"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Megumi", "label": "Megumi", "shape": "dot", "size": 15, "title": "\u003cb\u003eMegumi\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Jjk", "label": "Jjk", "shape": "dot", "size": 15, "title": "\u003cb\u003eJjk\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Gojo", "label": "Gojo", "shape": "dot", "size": 15, "title": "\u003cb\u003eGojo\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Jinwoo", "label": "Jinwoo", "shape": "dot", "size": 15, "title": "\u003cb\u003eJinwoo\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#ff6b6b", "font": {"color": "#ffffff"}, "id": "Solo Leveling", "label": "Solo Leveling", "shape": "diamond", "size": 20, "title": "\u003cb\u003eSolo Leveling\u003c/b\u003e\u003cbr\u003eType: Anime\u003cbr\u003eAttention Score: 0.162\u003cbr\u003eReddit: 1 mentions\u003cbr\u003eYouTube: 10 mentions"}, {"color": "#45b7d1", "font": {"color": "#ffffff"}, "id": "Youtube", "label": "Youtube", "shape": "dot", "size": 20, "title": "\u003cb\u003eYoutube\u003c/b\u003e\u003cbr\u003eType: Platform"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Zoro", "label": "Zoro", "shape": "dot", "size": 15, "title": "\u003cb\u003eZoro\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#ff6b6b", "font": {"color": "#ffffff"}, "id": "Demon Slayer", "label": "Demon Slayer", "shape": "diamond", "size": 20, "title": "\u003cb\u003eDemon Slayer\u003c/b\u003e\u003cbr\u003eType: Anime\u003cbr\u003eAttention Score: 0.312\u003cbr\u003eReddit: 1 mentions\u003cbr\u003eYouTube: 25 mentions"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Muzan", "label": "Muzan", "shape": "dot", "size": 15, "title": "\u003cb\u003eMuzan\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Yor", "label": "Yor", "shape": "dot", "size": 15, "title": "\u003cb\u003eYor\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Tanjiro", "label": "Tanjiro", "shape": "dot", "size": 15, "title": "\u003cb\u003eTanjiro\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Nezuko", "label": "Nezuko", "shape": "dot", "size": 15, "title": "\u003cb\u003eNezuko\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Kimetsu No Yaiba", "label": "Kimetsu No Yaiba", "shape": "dot", "size": 15, "title": "\u003cb\u003eKimetsu No Yaiba\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Eren", "label": "Eren", "shape": "dot", "size": 15, "title": "\u003cb\u003eEren\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#ff6b6b", "font": {"color": "#ffffff"}, "id": "Attack on Titan", "label": "Attack on Titan", "shape": "diamond", "size": 20, "title": "\u003cb\u003eAttack on Titan\u003c/b\u003e\u003cbr\u003eType: Anime\u003cbr\u003eAttention Score: 0.15\u003cbr\u003eYouTube: 10 mentions"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Titan", "label": "Titan", "shape": "dot", "size": 15, "title": "\u003cb\u003eTitan\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Aot", "label": "Aot", "shape": "dot", "size": 15, "title": "\u003cb\u003eAot\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Levi", "label": "Levi", "shape": "dot", "size": 15, "title": "\u003cb\u003eLevi\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Mikasa", "label": "Mikasa", "shape": "dot", "size": 15, "title": "\u003cb\u003eMikasa\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Dragonball", "label": "Dragonball", "shape": "dot", "size": 15, "title": "\u003cb\u003eDragonball\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#ff6b6b", "font": {"color": "#ffffff"}, "id": "Dragon Ball", "label": "Dragon Ball", "shape": "diamond", "size": 20, "title": "\u003cb\u003eDragon Ball\u003c/b\u003e\u003cbr\u003eType: Anime\u003cbr\u003eAttention Score: 0.173\u003cbr\u003eReddit: 2 mentions\u003cbr\u003eYouTube: 10 mentions"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Goku", "label": "Goku", "shape": "dot", "size": 15, "title": "\u003cb\u003eGoku\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Dbs", "label": "Dbs", "shape": "dot", "size": 15, "title": "\u003cb\u003eDbs\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Frieza", "label": "Frieza", "shape": "dot", "size": 15, "title": "\u003cb\u003eFrieza\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Vegeta", "label": "Vegeta", "shape": "dot", "size": 15, "title": "\u003cb\u003eVegeta\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Dbz", "label": "Dbz", "shape": "dot", "size": 15, "title": "\u003cb\u003eDbz\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Aki", "label": "Aki", "shape": "dot", "size": 15, "title": "\u003cb\u003eAki\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Hashira", "label": "Hashira", "shape": "dot", "size": 15, "title": "\u003cb\u003eHashira\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Madara", "label": "Madara", "shape": "dot", "size": 15, "title": "\u003cb\u003eMadara\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Kakashi", "label": "Kakashi", "shape": "dot", "size": 15, "title": "\u003cb\u003eKakashi\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Deku", "label": "Deku", "shape": "dot", "size": 15, "title": "\u003cb\u003eDeku\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#ff6b6b", "font": {"color": "#ffffff"}, "id": "My Hero Academia", "label": "My Hero Academia", "shape": "diamond", "size": 20, "title": "\u003cb\u003eMy Hero Academia\u003c/b\u003e\u003cbr\u003eType: Anime\u003cbr\u003eAttention Score: 0.3\u003cbr\u003eYouTube: 25 mentions"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Mha", "label": "Mha", "shape": "dot", "size": 15, "title": "\u003cb\u003eMha\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Bakugo", "label": "Bakugo", "shape": "dot", "size": 15, "title": "\u003cb\u003eBakugo\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Todo", "label": "Todo", "shape": "dot", "size": 15, "title": "\u003cb\u003eTodo\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Todoroki", "label": "Todoroki", "shape": "dot", "size": 15, "title": "\u003cb\u003eTodoroki\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Boku No Hero", "label": "Boku No Hero", "shape": "dot", "size": 15, "title": "\u003cb\u003eBoku No Hero\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Csm", "label": "Csm", "shape": "dot", "size": 15, "title": "\u003cb\u003eCsm\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#ff6b6b", "font": {"color": "#ffffff"}, "id": "Chainsaw Man", "label": "Chainsaw Man", "shape": "diamond", "size": 20, "title": "\u003cb\u003eChainsaw Man\u003c/b\u003e\u003cbr\u003eType: Anime\u003cbr\u003eAttention Score: 0.162\u003cbr\u003eReddit: 1 mentions\u003cbr\u003eYouTube: 10 mentions"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Denji", "label": "Denji", "shape": "dot", "size": 15, "title": "\u003cb\u003eDenji\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Makima", "label": "Makima", "shape": "dot", "size": 15, "title": "\u003cb\u003eMakima\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Loid", "label": "Loid", "shape": "dot", "size": 15, "title": "\u003cb\u003eLoid\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#ff6b6b", "font": {"color": "#ffffff"}, "id": "Spy x Family", "label": "Spy x Family", "shape": "diamond", "size": 20, "title": "\u003cb\u003eSpy x Family\u003c/b\u003e\u003cbr\u003eType: Anime\u003cbr\u003eAttention Score: 0.15\u003cbr\u003eYouTube: 10 mentions"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Anya", "label": "Anya", "shape": "dot", "size": 15, "title": "\u003cb\u003eAnya\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#4ecdc4", "font": {"color": "#ffffff"}, "id": "Forger", "label": "Forger", "shape": "dot", "size": 15, "title": "\u003cb\u003eForger\u003c/b\u003e\u003cbr\u003eType: Character"}, {"color": "#96ceb4", "font": {"color": "#ffffff"}, "id": "Reddit", "label": "Reddit", "shape": "dot", "size": 12, "title": "\u003cb\u003eReddit\u003c/b\u003e\u003cbr\u003eType: Source"}]);
+                  edges = new vis.DataSet([{"color": "#4ecdc4", "from": "Itachi", "title": "CHARACTER_OF", "to": "Naruto", "width": 1.0}, {"color": "#4ecdc4", "from": "Naruto", "title": "CHARACTER_OF", "to": "Aki", "width": 1.0}, {"color": "#4ecdc4", "from": "Naruto", "title": "CHARACTER_OF", "to": "Hashira", "width": 1.0}, {"color": "#4ecdc4", "from": "Naruto", "title": "CHARACTER_OF", "to": "Madara", "width": 1.0}, {"color": "#4ecdc4", "from": "Naruto", "title": "CHARACTER_OF", "to": "Goku", "width": 1.0}, {"color": "#4ecdc4", "from": "Naruto", "title": "CHARACTER_OF", "to": "Kakashi", "width": 1.0}, {"color": "#74b9ff", "from": "Naruto", "title": "3 mentions", "to": "Reddit", "width": 1.5}, {"color": "#74b9ff", "from": "Naruto", "title": "1 mentions", "to": "Youtube", "width": 0.5}, {"color": "#fd79a8", "from": "Naruto", "title": "SHARES_FANDOM", "to": "Dragon Ball", "width": 0.5}, {"color": "#fd79a8", "from": "Naruto", "title": "SHARES_FANDOM", "to": "Chainsaw Man", "width": 0.5}, {"color": "#4ecdc4", "from": "Luffy", "title": "CHARACTER_OF", "to": "One Piece", "width": 1.0}, {"color": "#4ecdc4", "from": "One Piece", "title": "CHARACTER_OF", "to": "Onepiece", "width": 1.0}, {"color": "#4ecdc4", "from": "One Piece", "title": "CHARACTER_OF", "to": "Straw Hat", "width": 1.0}, {"color": "#74b9ff", "from": "One Piece", "title": "4 mentions", "to": "Reddit", "width": 2.0}, {"color": "#74b9ff", "from": "One Piece", "title": "10 mentions", "to": "Youtube", "width": 5.0}, {"color": "#74b9ff", "from": "One Piece", "title": "1 mentions", "to": "Netflix", "width": 0.5}, {"color": "#4ecdc4", "from": "Yuji", "title": "CHARACTER_OF", "to": "Jujutsu Kaisen", "width": 1.0}, {"color": "#4ecdc4", "from": "Yuji", "title": "CHARACTER_OF", "to": "Demon Slayer", "width": 1.0}, {"color": "#4ecdc4", "from": "Jujutsu Kaisen", "title": "CHARACTER_OF", "to": "Megumi", "width": 1.0}, {"color": "#4ecdc4", "from": "Jujutsu Kaisen", "title": "CHARACTER_OF", "to": "Jjk", "width": 1.0}, {"color": "#4ecdc4", "from": "Jujutsu Kaisen", "title": "CHARACTER_OF", "to": "Gojo", "width": 1.0}, {"color": "#74b9ff", "from": "Jujutsu Kaisen", "title": "4 mentions", "to": "Reddit", "width": 2.0}, {"color": "#74b9ff", "from": "Jujutsu Kaisen", "title": "10 mentions", "to": "Youtube", "width": 5.0}, {"color": "#fd79a8", "from": "Jujutsu Kaisen", "title": "SHARES_FANDOM", "to": "Demon Slayer", "width": 0.5}, {"color": "#fd79a8", "from": "Jujutsu Kaisen", "title": "SHARES_FANDOM", "to": "Chainsaw Man", "width": 1.0}, {"color": "#4ecdc4", "from": "Megumi", "title": "CHARACTER_OF", "to": "Chainsaw Man", "width": 1.0}, {"color": "#4ecdc4", "from": "Jjk", "title": "CHARACTER_OF", "to": "Chainsaw Man", "width": 1.0}, {"color": "#4ecdc4", "from": "Jinwoo", "title": "CHARACTER_OF", "to": "Solo Leveling", "width": 1.0}, {"color": "#74b9ff", "from": "Solo Leveling", "title": "1 mentions", "to": "Reddit", "width": 0.5}, {"color": "#74b9ff", "from": "Solo Leveling", "title": "1 mentions", "to": "Youtube", "width": 0.5}, {"color": "#74b9ff", "from": "Youtube", "title": "25 mentions", "to": "Demon Slayer", "width": 5}, {"color": "#74b9ff", "from": "Youtube", "title": "10 mentions", "to": "Dragon Ball", "width": 5.0}, {"color": "#74b9ff", "from": "Youtube", "title": "10 mentions", "to": "Chainsaw Man", "width": 5.0}, {"color": "#74b9ff", "from": "Youtube", "title": "10 mentions", "to": "Attack on Titan", "width": 5.0}, {"color": "#74b9ff", "from": "Youtube", "title": "25 mentions", "to": "My Hero Academia", "width": 5}, {"color": "#74b9ff", "from": "Youtube", "title": "10 mentions", "to": "Spy x Family", "width": 5.0}, {"color": "#4ecdc4", "from": "Zoro", "title": "CHARACTER_OF", "to": "Demon Slayer", "width": 1.0}, {"color": "#4ecdc4", "from": "Demon Slayer", "title": "CHARACTER_OF", "to": "Muzan", "width": 1.0}, {"color": "#4ecdc4", "from": "Demon Slayer", "title": "CHARACTER_OF", "to": "Yor", "width": 1.0}, {"color": "#4ecdc4", "from": "Demon Slayer", "title": "CHARACTER_OF", "to": "Tanjiro", "width": 1.0}, {"color": "#4ecdc4", "from": "Demon Slayer", "title": "CHARACTER_OF", "to": "Nezuko", "width": 1.0}, {"color": "#4ecdc4", "from": "Demon Slayer", "title": "CHARACTER_OF", "to": "Kimetsu No Yaiba", "width": 1.0}, {"color": "#74b9ff", "from": "Demon Slayer", "title": "1 mentions", "to": "Reddit", "width": 0.5}, {"color": "#fd79a8", "from": "Demon Slayer", "title": "SHARES_FANDOM", "to": "My Hero Academia", "width": 0.5}, {"color": "#fd79a8", "from": "Demon Slayer", "title": "SHARES_FANDOM", "to": "Chainsaw Man", "width": 0.5}, {"color": "#fd79a8", "from": "Demon Slayer", "title": "SHARES_FANDOM", "to": "Spy x Family", "width": 0.5}, {"color": "#4ecdc4", "from": "Yor", "title": "CHARACTER_OF", "to": "Chainsaw Man", "width": 1.0}, {"color": "#4ecdc4", "from": "Yor", "title": "CHARACTER_OF", "to": "Spy x Family", "width": 1.0}, {"color": "#4ecdc4", "from": "Nezuko", "title": "CHARACTER_OF", "to": "My Hero Academia", "width": 1.0}, {"color": "#4ecdc4", "from": "Eren", "title": "CHARACTER_OF", "to": "Attack on Titan", "width": 1.0}, {"color": "#4ecdc4", "from": "Attack on Titan", "title": "CHARACTER_OF", "to": "Titan", "width": 1.0}, {"color": "#4ecdc4", "from": "Attack on Titan", "title": "CHARACTER_OF", "to": "Aot", "width": 1.0}, {"color": "#4ecdc4", "from": "Attack on Titan", "title": "CHARACTER_OF", "to": "Levi", "width": 1.0}, {"color": "#4ecdc4", "from": "Attack on Titan", "title": "CHARACTER_OF", "to": "Mikasa", "width": 1.0}, {"color": "#4ecdc4", "from": "Dragonball", "title": "CHARACTER_OF", "to": "Dragon Ball", "width": 1.0}, {"color": "#4ecdc4", "from": "Dragon Ball", "title": "CHARACTER_OF", "to": "Goku", "width": 1.0}, {"color": "#4ecdc4", "from": "Dragon Ball", "title": "CHARACTER_OF", "to": "Dbs", "width": 1.0}, {"color": "#4ecdc4", "from": "Dragon Ball", "title": "CHARACTER_OF", "to": "Frieza", "width": 1.0}, {"color": "#4ecdc4", "from": "Dragon Ball", "title": "CHARACTER_OF", "to": "Vegeta", "width": 1.0}, {"color": "#4ecdc4", "from": "Dragon Ball", "title": "CHARACTER_OF", "to": "Dbz", "width": 1.0}, {"color": "#74b9ff", "from": "Dragon Ball", "title": "2 mentions", "to": "Reddit", "width": 1.0}, {"color": "#4ecdc4", "from": "Aki", "title": "CHARACTER_OF", "to": "Chainsaw Man", "width": 1.0}, {"color": "#4ecdc4", "from": "Deku", "title": "CHARACTER_OF", "to": "My Hero Academia", "width": 1.0}, {"color": "#4ecdc4", "from": "My Hero Academia", "title": "CHARACTER_OF", "to": "Mha", "width": 1.0}, {"color": "#4ecdc4", "from": "My Hero Academia", "title": "CHARACTER_OF", "to": "Bakugo", "width": 1.0}, {"color": "#4ecdc4", "from": "My Hero Academia", "title": "CHARACTER_OF", "to": "Todo", "width": 1.0}, {"color": "#4ecdc4", "from": "My Hero Academia", "title": "CHARACTER_OF", "to": "Todoroki", "width": 1.0}, {"color": "#4ecdc4", "from": "My Hero Academia", "title": "CHARACTER_OF", "to": "Boku No Hero", "width": 1.0}, {"color": "#4ecdc4", "from": "Csm", "title": "CHARACTER_OF", "to": "Chainsaw Man", "width": 1.0}, {"color": "#4ecdc4", "from": "Chainsaw Man", "title": "CHARACTER_OF", "to": "Denji", "width": 1.0}, {"color": "#4ecdc4", "from": "Chainsaw Man", "title": "CHARACTER_OF", "to": "Makima", "width": 1.0}, {"color": "#74b9ff", "from": "Chainsaw Man", "title": "1 mentions", "to": "Reddit", "width": 0.5}, {"color": "#fd79a8", "from": "Chainsaw Man", "title": "SHARES_FANDOM", "to": "Spy x Family", "width": 0.5}, {"color": "#4ecdc4", "from": "Loid", "title": "CHARACTER_OF", "to": "Spy x Family", "width": 1.0}, {"color": "#4ecdc4", "from": "Spy x Family", "title": "CHARACTER_OF", "to": "Anya", "width": 1.0}, {"color": "#4ecdc4", "from": "Spy x Family", "title": "CHARACTER_OF", "to": "Forger", "width": 1.0}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"forceAtlas2Based": {"gravitationalConstant": -80, "centralGravity": 0.008, "springLength": 180, "springConstant": 0.04, "damping": 0.5}, "solver": "forceAtlas2Based", "stabilization": {"iterations": 200}}, "nodes": {"borderWidth": 2, "borderWidthSelected": 4, "font": {"size": 14, "face": "monospace"}}, "edges": {"smooth": {"type": "continuous"}, "color": {"inherit": false, "opacity": 0.6}, "width": 1.5}, "interaction": {"hover": true, "tooltipDelay": 100, "navigationButtons": true, "keyboard": true}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
