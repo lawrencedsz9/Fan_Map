@@ -4,22 +4,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from config import (
-    TRACKED_TOPICS, SUBREDDITS, USE_MOCK_DATA,
-    YOUTUBE_API_KEY,
-)
+from config import TRACKED_TOPICS, SUBREDDITS, YOUTUBE_API_KEY
 
 log = logging.getLogger(__name__)
 
 
 def collect_all() -> list[dict[str, Any]]:
     """Run every collector and return a unified list of attention signals."""
-
-    if USE_MOCK_DATA:
-        log.info("🎭 Using mock data (set USE_MOCK_DATA=false in .env for real APIs)")
-        from collectors.mock_data import generate_mock_signals
-        return generate_mock_signals(TRACKED_TOPICS)
-
     signals: list[dict[str, Any]] = []
 
     # Reddit — RSS Feed (no API key needed)

@@ -1,5 +1,5 @@
 """
-Topic & entity extraction pipeline.
+Topic, Platform, Studio, Character entity extraction pipeline.
 
 Extracts anime names, characters, studios, and platforms from raw signal text.
 Works in two modes:

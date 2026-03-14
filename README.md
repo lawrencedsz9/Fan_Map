@@ -45,7 +45,6 @@ The default configuration ships with **anime titles as example topics**, but the
 
    - `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT`
    - `YOUTUBE_API_KEY`
-   - `USE_MOCK_DATA=true` to run without real API keys (uses sample/mock data)
 
 ---
 
