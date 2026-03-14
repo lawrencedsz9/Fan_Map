@@ -12,29 +12,13 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 from collections import defaultdict
 
-from config import DATA_DIR, EXPLOSION_THRESHOLD
+from config import EXPLOSION_THRESHOLD
+from db.mongo_storage import append_history_snapshot, load_history, save_trend_report
 
 log = logging.getLogger(__name__)
-
-HISTORY_FILE = DATA_DIR / "attention_history.json"
-
-
-def _load_history() -> dict[str, list[dict[str, Any]]]:
-    """Load historical attention snapshots."""
-    if HISTORY_FILE.exists():
-        return json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
-    return {}
-
-
-def _save_history(history: dict[str, list[dict[str, Any]]]) -> None:
-    """Persist attention history to disk."""
-    DATA_DIR.mkdir(exist_ok=True)
-    HISTORY_FILE.write_text(json.dumps(history, indent=2), encoding="utf-8")
-
 
 def record_snapshot(signals: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
     """Record current attention levels and return current counts per topic."""
@@ -50,19 +34,8 @@ def record_snapshot(signals: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
                 topic_counts[topic][source] += 1
             topic_counts[topic]["total"] += 1
 
-    # Save to history
-    history = _load_history()
-    for topic, counts in topic_counts.items():
-        if topic not in history:
-            history[topic] = []
-        history[topic].append({
-            "timestamp": now,
-            **counts,
-        })
-        # Keep last 100 snapshots per topic
-        history[topic] = history[topic][-100:]
-
-    _save_history(history)
+    # Save to history in MongoDB
+    append_history_snapshot(topic_counts, now)
     log.info("Recorded attention snapshot for %d topics", len(topic_counts))
     return dict(topic_counts)
 
@@ -72,7 +45,7 @@ def detect_explosions(current_counts: dict[str, dict[str, int]]) -> list[dict[st
     Compare current attention to historical baseline.
     Flag topics where current >> baseline as "exploding."
     """
-    history = _load_history()
+    history = load_history()
     explosions: list[dict[str, Any]] = []
 
     for topic, current in current_counts.items():
@@ -142,9 +115,8 @@ def get_trend_report(signals: list[dict[str, Any]]) -> dict[str, Any]:
         },
     }
 
-    # Save report
-    report_path = DATA_DIR / "latest_trend_report.json"
-    report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    # Save report to MongoDB
+    save_trend_report(report)
     log.info("Trend report: %d explosions detected", len(explosions))
 
     return report

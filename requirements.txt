@@ -15,9 +15,6 @@ sentence-transformers==2.6.1
 networkx==3.3
 pyvis==0.3.2
 
-# Database
-tinydb==4.8.0
-
 # API
 fastapi==0.111.0
 uvicorn==0.29.0
@@ -26,3 +23,6 @@ uvicorn==0.29.0
 python-dotenv==1.0.1
 schedule==1.2.2
 rich==13.7.1
+
+# Database (MongoDB)
+pymongo==4.8.0
