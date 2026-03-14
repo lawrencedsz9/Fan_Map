@@ -11,15 +11,14 @@ Run it to:
   6. Launch the dashboard
 
 Usage:
-    python main.py              → Run pipeline + launch dashboard
-    python main.py --collect    → Run collection only
-    python main.py --graph      → Build graph only 
-    python main.py --serve      → Launch dashboard only
+    python main.py               Run pipeline + launch dashboard
+    python main.py --collect     Run collection only
+    python main.py --graph       Build graph only 
+    python main.py --serve       Launch dashboard only
 """
 
 from __future__ import annotations
 import argparse
-import json
 import logging
 import sys
 import webbrowser
@@ -29,6 +28,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from config import DATA_DIR, GRAPH_OUTPUT
+from db.mongo_storage import save_signals
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -40,9 +40,6 @@ logging.basicConfig(
 )
 log = logging.getLogger("main")
 
-SIGNALS_CACHE = DATA_DIR / "signals_cache.json"
-
-
 def run_collection() -> list[dict]:
     """Step 1: Collect signals."""
     console.print("\n[bold cyan]COLLECTING ATTENTION SIGNALS...[/bold cyan]")
@@ -50,9 +47,8 @@ def run_collection() -> list[dict]:
     from collectors import collect_all
     signals = collect_all()
 
-    # Cache signals
-    DATA_DIR.mkdir(exist_ok=True)
-    SIGNALS_CACHE.write_text(json.dumps(signals, indent=2, default=str), encoding="utf-8")
+    # Cache signals in MongoDB
+    save_signals(signals)
 
     console.print(f"  Collected [bold green]{len(signals)}[/bold green] signals")
     return signals
@@ -189,12 +185,7 @@ def main():
         return
 
     if args.graph:
-        if SIGNALS_CACHE.exists():
-            signals = json.loads(SIGNALS_CACHE.read_text(encoding="utf-8"))
-            enriched = run_extraction(signals)
-            run_graph(enriched)
-        else:
-            console.print("[red]No cached signals. Run --collect first.[/red]")
+        console.print("[red]Graph-from-cache mode is not supported with MongoDB yet.[/red]")
         return
 
     if args.collect:

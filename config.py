@@ -23,6 +23,10 @@ YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
 # Mock mode (no API keys needed)
 USE_MOCK_DATA = os.getenv("USE_MOCK_DATA", "true").lower() == "true"
 
+# Storage / Database
+MONGODB_URI = os.getenv("MONGODB_URI", "")
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "fandom_intel")
+
 # Tracking targets
 TRACKED_TOPICS = [
     "One Piece",
