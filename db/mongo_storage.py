@@ -6,6 +6,10 @@ from typing import Any, Dict, List, Optional
 from pymongo import MongoClient, ASCENDING
 from pymongo.collection import Collection
 
+try:
+    import certifi
+except ImportError:
+    certifi = None  # type: ignore[assignment]
 
 _client: Optional[MongoClient] = None
 
@@ -16,7 +20,13 @@ def _get_client() -> MongoClient:
         uri = os.getenv("MONGODB_URI")
         if not uri:
             raise RuntimeError("MONGODB_URI is not set")
-        _client = MongoClient(uri)
+        kwargs: dict = {
+            "serverSelectionTimeoutMS": 15_000,
+            "connectTimeoutMS": 10_000,
+        }
+        if certifi is not None:
+            kwargs["tlsCAFile"] = certifi.where()
+        _client = MongoClient(uri, **kwargs)
     return _client
 
 
@@ -52,7 +62,8 @@ def save_signals(signals: List[Dict[str, Any]]) -> None:
     if not signals:
         return
     col = _signals_col()
-    col.insert_many(signals)
+    # Insert copies to avoid mutating original dicts with ObjectId
+    col.insert_many([s.copy() for s in signals])
 
 
 def load_signals(limit: int = 1000) -> List[Dict[str, Any]]:
@@ -94,7 +105,7 @@ def load_history() -> Dict[str, List[Dict[str, Any]]]:
 def save_trend_report(report: Dict[str, Any]) -> None:
     """Persist the latest trend report."""
     col = _reports_col()
-    col.insert_one(report)
+    col.insert_one(report.copy())
 
 
 def load_latest_trend_report() -> Optional[Dict[str, Any]]:
