@@ -24,6 +24,9 @@ def _get_client() -> MongoClient:
         # Ensure URI starts with mongodb:// or mongodb+srv://
         uri = uri.strip()  # Remove any whitespace
         
+        # Remove trailing slash if present before adding params
+        uri = uri.rstrip("/")
+        
         # On Render, append SSL parameters to bypass certificate validation
         if "RENDER" in os.environ:
             if "?" in uri:
@@ -32,7 +35,7 @@ def _get_client() -> MongoClient:
                     uri += "&tlsInsecure=true&retryWrites=false"
             else:
                 # No query params yet
-                uri += "/?tlsInsecure=true&retryWrites=false"
+                uri += "?tlsInsecure=true&retryWrites=false"
         
         kwargs: dict = {
             "serverSelectionTimeoutMS": 15_000,
