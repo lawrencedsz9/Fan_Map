@@ -450,33 +450,34 @@ function renderStats(stats) {
 }
 
 function renderRankings(rankings) {
-  if (!rankings.length) {
+  if (!rankings || !rankings.length) {
     document.getElementById('rankings').innerHTML = '<div class="loading">No data yet</div>';
     return;
   }
 
-  const maxScore = Math.max(...rankings.map(r => r.attention_score));
+  const maxScore = Math.max(...rankings.map(r => r.attention_score || 0));
 
   document.getElementById('rankings').innerHTML = rankings.map((r, i) => {
-    const pct = maxScore > 0 ? (r.attention_score / maxScore) * 100 : 0;
+    const pct = maxScore > 0 ? ((r.attention_score || 0) / maxScore) * 100 : 0;
     const hue = 120 - (i / rankings.length) * 120;
     const rankClass = i < 3 ? `rank-${i + 1}` : 'rank-other';
+    const rank = i + 1;
 
     return `
       <div class="ranking-item">
-        <div class="rank-badge ${rankClass}">${r.rank}</div>
+        <div class="rank-badge ${rankClass}">${rank}</div>
         <div class="rank-info">
-          <div class="rank-name">${r.anime}</div>
+          <div class="rank-name">${r.anime || 'Unknown'}</div>
           <div class="rank-meta">
-            Reddit: ${r.reddit_mentions} &middot;
-            YouTube: ${r.youtube_mentions} &middot;
-            Trends: ${r.google_trends_score}
+            Reddit: ${r.reddit_mentions || 0} &middot;
+            YouTube: ${r.youtube_mentions || 0} &middot;
+            Trends: ${r.google_trends_score || 0}
           </div>
         </div>
         <div class="attention-bar-wrap">
           <div class="attention-bar" style="width:${pct}%; background: hsl(${hue}, 70%, 55%)"></div>
         </div>
-        <div class="score-value" style="color: hsl(${hue}, 70%, 55%)">${(r.attention_score * 100).toFixed(0)}</div>
+        <div class="score-value" style="color: hsl(${hue}, 70%, 55%)">${((r.attention_score || 0) * 100).toFixed(0)}</div>
       </div>
     `;
   }).join('');
@@ -487,7 +488,6 @@ function renderExplosions(explosions, trends) {
     const tracked = trends.topics_tracked || 0;
     document.getElementById('explosions').innerHTML = `
       <div style="text-align:center; padding: 40px; color: var(--muted)">
-        <div style="font-size: 40px; margin-bottom: 12px;">&#128640;</div>
         <div style="font-weight: 600; margin-bottom: 4px;">No explosions detected (yet)</div>
         <div style="font-size: 13px;">Monitoring ${tracked} topics &mdash; run more collection cycles to build baseline data</div>
       </div>
@@ -520,7 +520,7 @@ function renderExplosions(explosions, trends) {
 }
 
 function renderSignals(signals) {
-  if (!signals.length) {
+  if (!signals || !signals.length) {
     document.getElementById('signals').innerHTML = '<div class="loading">No signals collected</div>';
     return;
   }
