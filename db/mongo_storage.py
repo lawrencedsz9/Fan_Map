@@ -23,10 +23,22 @@ def _get_client() -> MongoClient:
         kwargs: dict = {
             "serverSelectionTimeoutMS": 15_000,
             "connectTimeoutMS": 10_000,
+            "retryWrites": False,  # Disable retry writes to avoid SSL issues
         }
-        if certifi is not None:
+        # Only use certifi if available and not on Render
+        if certifi is not None and "RENDER" not in os.environ:
             kwargs["tlsCAFile"] = certifi.where()
-        _client = MongoClient(uri, **kwargs)
+        try:
+            _client = MongoClient(uri, **kwargs)
+        except Exception as e:
+            # Fallback: disable TLS verification if certificate fails
+            if "SSL" in str(e) or "tlsv1" in str(e).lower():
+                import logging
+                logging.warning("SSL error detected, retrying with tlsInsecure=True")
+                kwargs["tlsInsecure"] = True
+                _client = MongoClient(uri, **kwargs)
+            else:
+                raise
     return _client
 
 
