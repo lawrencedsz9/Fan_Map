@@ -21,27 +21,18 @@ def _get_client() -> MongoClient:
         if not uri:
             raise RuntimeError("MONGODB_URI is not set")
         
-        # Ensure URI starts with mongodb:// or mongodb+srv://
-        uri = uri.strip()  # Remove any whitespace
-        
-        # Remove trailing slash if present before adding params
-        uri = uri.rstrip("/")
-        
-        # On Render, append SSL parameters to bypass certificate validation
-        if "RENDER" in os.environ:
-            if "?" in uri:
-                # Already has query params
-                if "tlsInsecure" not in uri:
-                    uri += "&tlsInsecure=true&retryWrites=false"
-            else:
-                # No query params yet
-                uri += "?tlsInsecure=true&retryWrites=false"
+        uri = uri.strip()
         
         kwargs: dict = {
             "serverSelectionTimeoutMS": 15_000,
             "connectTimeoutMS": 10_000,
         }
-        if certifi is not None and "RENDER" not in os.environ:
+        
+        # On Render, disable SSL certificate validation
+        if "RENDER" in os.environ:
+            kwargs["tlsInsecure"] = True
+            kwargs["retryWrites"] = False
+        elif certifi is not None:
             kwargs["tlsCAFile"] = certifi.where()
         
         _client = MongoClient(uri, **kwargs)
