@@ -62,10 +62,12 @@ async def startup() -> None:
     """Start server immediately; run pipeline in background so Render sees an open port."""
     async def run_pipeline_background() -> None:
         try:
+            log.info("Starting background pipeline...")
             await asyncio.to_thread(_run_pipeline)
-            log.info("Startup pipeline finished successfully")
+            log.info("✅ Startup pipeline finished successfully")
         except Exception as e:
-            log.exception("Startup pipeline failed (server is up; use /api/refresh when DB is ready): %s", e)
+            log.error("❌ STARTUP PIPELINE FAILED: %s", str(e), exc_info=True)
+            log.error("Check: MONGODB_URI, REDDIT credentials, API keys")
 
     asyncio.create_task(run_pipeline_background())
 
