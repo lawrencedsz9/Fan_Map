@@ -3,13 +3,14 @@ FastAPI server — exposes the Fandom Intelligence Graph as a live API + dashboa
 """
 
 from __future__ import annotations
+import asyncio
 import logging
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
 
-
+log = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -40,8 +41,11 @@ def _run_pipeline() -> None:
     from graph.build_graph import build_graph, get_graph_stats
     from graph.visualize import render_graph
     from config import GRAPH_OUTPUT
+    from db.mongo_storage import save_signals
 
+    log.info("Running pipeline...")
     signals = collect_all()
+    save_signals(signals)
     enriched = enrich_all(signals)
     G = build_graph(enriched)
     report = get_trend_report(enriched)
@@ -55,7 +59,15 @@ def _run_pipeline() -> None:
 
 @app.on_event("startup")
 async def startup() -> None:
-    _run_pipeline()
+    """Start server immediately; run pipeline in background so Render sees an open port."""
+    async def run_pipeline_background() -> None:
+        try:
+            await asyncio.to_thread(_run_pipeline)
+            log.info("Startup pipeline finished successfully")
+        except Exception as e:
+            log.exception("Startup pipeline failed (server is up; use /api/refresh when DB is ready): %s", e)
+
+    asyncio.create_task(run_pipeline_background())
 
 
 @app.post("/api/refresh")

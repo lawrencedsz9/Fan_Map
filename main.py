@@ -154,17 +154,41 @@ def _print_explosions(report: dict):
         )
 
 
-def launch_server():
-    """Launch the FastAPI dashboard."""
-    console.print("\n[bold cyan]LAUNCHING DASHBOARD...[/bold cyan]")
-    console.print("  Dashboard: [bold underline]http://localhost:8000[/bold underline]")
-    console.print("  Graph:     [bold underline]http://localhost:8000/graph[/bold underline]")
-    console.print("  API:       [bold underline]http://localhost:8000/api/stats[/bold underline]")
-    console.print("\n[dim]Press Ctrl+C to stop[/dim]\n")
+def _find_available_port(host: str, start: int, end: int) -> int:
+    """Return first port in [start, end) that can be bound. Raises OSError if none."""
+    import socket
+    for port in range(start, end):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind((host, port))
+                return port
+        except OSError:
+            continue
+    raise OSError(f"No free port in range {start}-{end - 1}")
 
+
+def launch_server():
+    """Launch the FastAPI dashboard. Uses PORT env if set (e.g. Render), else picks 8000 or next free port."""
+    import os
     import uvicorn
-    webbrowser.open("http://localhost:8000")
-    uvicorn.run("api.server:app", host="0.0.0.0", port=8000, reload=False)
+
+    host = "0.0.0.0"
+    port_str = os.getenv("PORT")
+    if port_str and port_str.isdigit():
+        port = int(port_str)
+    else:
+        port = _find_available_port(host, 8000, 8010)
+        if port != 8000:
+            log.warning("Port 8000 in use, using port %s", port)
+
+    url = f"http://localhost:{port}"
+    console.print("\n[bold cyan]LAUNCHING DASHBOARD...[/bold cyan]")
+    console.print(f"  Dashboard: [bold underline]{url}[/bold underline]")
+    console.print(f"  Graph:     [bold underline]{url}/graph[/bold underline]")
+    console.print(f"  API:       [bold underline]{url}/api/stats[/bold underline]")
+    console.print("\n[dim]Press Ctrl+C to stop[/dim]\n")
+    webbrowser.open(url)
+    uvicorn.run("api.server:app", host=host, port=port, reload=False)
 
 
 def main():
