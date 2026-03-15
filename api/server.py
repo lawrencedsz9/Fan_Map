@@ -66,8 +66,19 @@ async def startup() -> None:
             await asyncio.to_thread(_run_pipeline)
             log.info("✅ Startup pipeline finished successfully")
         except Exception as e:
-            log.error("❌ STARTUP PIPELINE FAILED: %s", str(e), exc_info=True)
-            log.error("Check: MONGODB_URI, REDDIT credentials, API keys")
+            # Log the error but don't crash - app will still start with empty state
+            log.warning("⚠️  Background pipeline encountered issues: %s", str(e), exc_info=True)
+            log.warning("App will continue running. MongoDB may be unavailable temporarily.")
+            log.warning("Attempting to re-run pipeline in 30 seconds...")
+            
+            # Retry after 30 seconds
+            await asyncio.sleep(30)
+            try:
+                await asyncio.to_thread(_run_pipeline)
+                log.info("✅ Pipeline retry successful")
+            except Exception as retry_e:
+                log.warning("⚠️  Pipeline retry also failed: %s", str(retry_e))
+                log.info("Running with limited data until MongoDB recovers")
 
     asyncio.create_task(run_pipeline_background())
 
