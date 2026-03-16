@@ -29,24 +29,27 @@ _state: dict = {
     "stats": None,
     "trend_report": None,
     "signals": [],
+    "city_plan": [],
 }
 
 
 def _run_pipeline() -> None:
     """Execute the full collection → extraction → graph → trend pipeline."""
     import networkx as nx
-    from collectors import collect_all
-    from processing.topic_extraction import enrich_all
+    from processing.city_agent import app as city_agent_app
     from processing.trend_detector import get_trend_report
     from graph.build_graph import build_graph, get_graph_stats
     from graph.visualize import render_graph
     from config import GRAPH_OUTPUT
-    from db.mongo_storage import save_signals
 
-    log.info("Running pipeline...")
-    signals = collect_all()
-    save_signals(signals)
-    enriched = enrich_all(signals)
+    log.info("Running pipeline with LangGraph City Agent...")
+    
+    # LangGraph Execution: Scout -> Analyzer -> Architect
+    result = city_agent_app.invoke({"raw_signals": []})
+    enriched = result.get("enriched_signals", [])
+    city_plan = result.get("city_plan", [])
+
+    # Legacy Graph Building (for 2D dashboard)
     G = build_graph(enriched)
     report = get_trend_report(enriched)
     render_graph(G, GRAPH_OUTPUT)
@@ -55,6 +58,7 @@ def _run_pipeline() -> None:
     _state["stats"] = get_graph_stats(G)
     _state["trend_report"] = report
     _state["signals"] = enriched
+    _state["city_plan"] = city_plan  # New 3D city data
 
 
 @app.on_event("startup")
@@ -64,7 +68,7 @@ async def startup() -> None:
         try:
             log.info("Starting background pipeline...")
             await asyncio.to_thread(_run_pipeline)
-            log.info("✅ Startup pipeline finished successfully")
+            log.info("Startup pipeline finished successfully")
         except Exception as e:
             # Log the error but don't crash - app will still start with empty state
             log.warning("⚠️  Background pipeline encountered issues: %s", str(e), exc_info=True)
@@ -75,9 +79,9 @@ async def startup() -> None:
             await asyncio.sleep(30)
             try:
                 await asyncio.to_thread(_run_pipeline)
-                log.info("✅ Pipeline retry successful")
+                log.info("Pipeline retry successful")
             except Exception as retry_e:
-                log.warning("⚠️  Pipeline retry also failed: %s", str(retry_e))
+                log.warning("Pipeline retry also failed: %s", str(retry_e))
                 log.info("Running with limited data until MongoDB recovers")
 
     asyncio.create_task(run_pipeline_background())
@@ -112,6 +116,15 @@ async def graph_data():
 async def signals():
     """Get raw collected signals (last run)."""
     return JSONResponse(_state["signals"][:100])
+
+
+@app.get("/api/city")
+async def city_layout():
+    """Get the calculated 3D city layout coordinates."""
+    return JSONResponse({
+        "buildings": _state.get("city_plan", []),
+        "meta": {"timestamp": "now"}
+    })
 
 
 @app.get("/api/anime/{name}")
