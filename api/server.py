@@ -77,7 +77,7 @@ async def startup() -> None:
             log.info("Startup pipeline finished successfully")
         except Exception as e:
             # Log the error but don't crash - app will still start with empty state
-            log.warning("⚠️  Background pipeline encountered issues: %s", str(e), exc_info=True)
+            log.warning("Background pipeline encountered issues: %s", str(e), exc_info=True)
             log.warning("App will continue running. MongoDB may be unavailable temporarily.")
             log.warning("Attempting to re-run pipeline in 30 seconds...")
             
@@ -122,6 +122,102 @@ async def graph_data():
 async def signals():
     """Get raw collected signals (last run)."""
     return JSONResponse(_state["signals"][:100])
+
+
+@app.get("/api/pending-approvals")
+async def get_pending_approvals():
+    """STEP 5: Get all trends pending human approval."""
+    try:
+        from db.mongo_storage import _get_db
+        from bson import ObjectId
+        
+        db = _get_db()
+        pending = list(db.pending_trends.find(
+            {"status": "pending"},
+            {"_id": 1, "topic": 1, "confidence": 1, "reasoning": 1, "signals_count": 1, "sources": 1, "created_at": 1}
+        ).sort("created_at", -1))
+        
+        result = {
+            "count": len(pending),
+            "trends": [
+                {
+                    "id": str(p["_id"]),
+                    "topic": p.get("topic", "Unknown"),
+                    "confidence": p.get("confidence", 0),
+                    "reasoning": p.get("reasoning", ""),
+                    "signals_count": p.get("signals_count", 0),
+                    "sources": p.get("sources", []),
+                    "created_at": p.get("created_at", "").isoformat() if hasattr(p.get("created_at"), "isoformat") else str(p.get("created_at", ""))
+                }
+                for p in pending
+            ]
+        }
+        return JSONResponse(result)
+    
+    except Exception as e:
+        log.error(f"Error fetching pending approvals: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/api/approve/{trend_id}")
+async def approve_trend(trend_id: str, action: str = "approve"):
+    """STEP 5: Approve or reject a pending trend.
+    
+    Args:
+        trend_id: MongoDB _id of the pending trend
+        action: "approve" or "reject"
+    """
+    try:
+        from db.mongo_storage import _get_db
+        from bson import ObjectId
+        
+        db = _get_db()
+        
+        # Find pending trend
+        pending = db.pending_trends.find_one({"_id": ObjectId(trend_id)})
+        if not pending:
+            return JSONResponse({"error": "Trend not found"}, status_code=404)
+        
+        if action == "approve":
+            # Move to final trends collection
+            final_trend = {
+                "topic": pending.get("topic", "Unknown"),
+                "confidence": pending.get("confidence", 0),
+                "reasoning": pending.get("reasoning", ""),
+                "signals_count": pending.get("signals_count", 0),
+                "sources": pending.get("sources", []),
+                "approval_status": "human_approved",
+                "approved_at": asyncio.get_event_loop().time(),
+                "created_at": pending.get("created_at")
+            }
+            result = db.trends.insert_one(final_trend)
+            
+            # Remove from pending
+            db.pending_trends.delete_one({"_id": ObjectId(trend_id)})
+            
+            log.info(f"Trend {trend_id} APPROVED and saved to trends collection")
+            return JSONResponse({
+                "status": "approved",
+                "trend_id": str(result.inserted_id),
+                "message": f"Trend '{pending.get('topic')}' approved and saved"
+            })
+        
+        elif action == "reject":
+            # Just remove from pending
+            db.pending_trends.delete_one({"_id": ObjectId(trend_id)})
+            
+            log.info(f"Trend {trend_id} REJECTED")
+            return JSONResponse({
+                "status": "rejected",
+                "message": f"Trend '{pending.get('topic')}' rejected"
+            })
+        
+        else:
+            return JSONResponse({"error": "Invalid action. Use 'approve' or 'reject'"}, status_code=400)
+    
+    except Exception as e:
+        log.error(f"Error processing approval: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 @app.get("/api/anime/{name}")

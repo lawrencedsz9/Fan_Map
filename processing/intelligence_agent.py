@@ -2,6 +2,7 @@ from typing import TypedDict, List, Dict, Any, Literal
 from langgraph.graph import StateGraph, END
 import logging
 import os
+from datetime import datetime, timedelta
 from tenacity import retry, stop_after_attempt, wait_exponential
 from db.mongo_storage import save_signals
 
@@ -17,6 +18,8 @@ class IntelligenceState(TypedDict):
     trends_signals: List[Dict[str, Any]]
     should_analyze: bool  # Router decision flag
     llm_judgment: Dict[str, Any]  # LLM verdict on explosions
+    approval_id: str  # For pending trends
+    approval_status: str  # "approved", "pending", "rejected"
 
 # --- Retry Decorator (handles transient failures) ---
 @retry(
@@ -181,7 +184,7 @@ def llm_judgment_node(state: IntelligenceState) -> IntelligenceState:
     - Is this real hype, or bot spam?
     - Are the signals authentic?
     """
-    print("🧠 LLM Judgment: Evaluating trends with AI reasoning...")
+    print("Evaluating trends with AI reasoning...")
     
     is_exploding = state.get("is_exploding", False)
     enriched = state.get("enriched_signals", [])
@@ -216,10 +219,6 @@ Mention Counts: {exploding_topics}
 **Sample Signals:**
 {chr(10).join(sample_snippets)}
 
-**Your Task:**
-1. Is this trend explosion REAL (authentic hype from genuine interest)?
-2. What's your confidence level (0.0-1.0)?
-3. Why? (brief reasoning)
 
 Respond in JSON format:
 {{"is_real": true/false, "confidence": 0.0-1.0, "reasoning": "brief explanation"}}"""
@@ -251,7 +250,7 @@ Respond in JSON format:
             verdict = {"is_real": False, "confidence": 0.5, "reasoning": "Could not parse LLM response"}
         
         log.info(f"LLM Judgment: {verdict}")
-        print(f"  Verdict: {'✅ REAL HYPE' if verdict.get('is_real') else '❌ LIKELY NOISE'}")
+        print(f"  Verdict: {'REAL HYPE' if verdict.get('is_real') else '❌ LIKELY NOISE'}")
         print(f"  Confidence: {verdict.get('confidence', 0):.2f}")
         print(f"  Reason: {verdict.get('reasoning', 'N/A')}")
         
@@ -269,10 +268,152 @@ def conditional_llm_router(state: IntelligenceState) -> Literal["llm_judgment", 
     else:
         return "end"
 
+def decision_router(state: IntelligenceState) -> Literal["auto_save", "pending_approval", "discard"]:
+    """STEP 5: Three-way router based on LLM confidence.
+    
+    Routes to:
+    - auto_save: confidence > 0.85 (high confidence → save immediately)
+    - pending_approval: 0.60-0.85 (medium confidence → wait for human)
+    - discard: confidence < 0.60 (low confidence → trash it)
+    """
+    llm_judgment = state.get("llm_judgment", {})
+    is_real = llm_judgment.get("is_real", False)
+    confidence = llm_judgment.get("confidence", 0.5)
+    
+    if not is_real:
+        log.info(f"Decision Router: is_real=False, confidence={confidence}. Discarding.")
+        return "discard"
+    
+    if confidence > 0.85:
+        log.info(f"Decision Router: High confidence ({confidence}). Auto-saving.")
+        return "auto_save"
+    else:
+        log.info(f"Decision Router: Medium confidence ({confidence}). Pending approval.")
+        return "pending_approval"
+
+def auto_save_node(state: IntelligenceState) -> IntelligenceState:
+    """Auto-save high-confidence trends directly to final collection."""
+    print("Auto-Save: High confidence trend. Saving to database...")
+    
+    try:
+        from db.mongo_storage import _get_db
+        from bson import ObjectId
+        
+        db = _get_db()
+        enriched = state.get("enriched_signals", [])
+        llm_judgment = state.get("llm_judgment", {})
+        
+        # Extract topic from enriched signals
+        topics_mentioned = {}
+        for signal in enriched:
+            for topic in signal.get("matched_topics", []):
+                topics_mentioned[topic] = topics_mentioned.get(topic, 0) + 1
+        
+        top_topic = max(topics_mentioned, key=topics_mentioned.get) if topics_mentioned else "Unknown"
+        
+        trend_doc = {
+            "topic": top_topic,
+            "confidence": llm_judgment.get("confidence", 0),
+            "reasoning": llm_judgment.get("reasoning", ""),
+            "signals_count": len(enriched),
+            "sources": list(set(s.get("source", "unknown") for s in enriched)),
+            "approval_status": "auto_approved",
+            "approved_at": datetime.now(),
+            "created_at": datetime.now()
+        }
+        
+        result = db.trends.insert_one(trend_doc)
+        trend_id = str(result.inserted_id)
+        
+        log.info(f"Auto-Save: Trend '{top_topic}' saved with ID {trend_id}")
+        print(f"Saved to trends collection: {trend_id}")
+        
+        return {
+            "approval_id": trend_id,
+            "approval_status": "auto_approved"
+        }
+    
+    except Exception as e:
+        log.error(f"Auto-Save failed: {e}")
+        print(f"Error: {e}")
+        return {
+            "approval_id": "",
+            "approval_status": "error"
+        }
+
+def pending_approval_node(state: IntelligenceState) -> IntelligenceState:
+    """Save medium-confidence trends to pending collection for human review."""
+    print("Pending Approval: Medium confidence. Waiting for human review...")
+    
+    try:
+        from db.mongo_storage import _get_db
+        from bson import ObjectId
+        
+        db = _get_db()
+        enriched = state.get("enriched_signals", [])
+        llm_judgment = state.get("llm_judgment", {})
+        
+        # Extract topic
+        topics_mentioned = {}
+        for signal in enriched:
+            for topic in signal.get("matched_topics", []):
+                topics_mentioned[topic] = topics_mentioned.get(topic, 0) + 1
+        
+        top_topic = max(topics_mentioned, key=topics_mentioned.get) if topics_mentioned else "Unknown"
+        
+        pending_doc = {
+            "topic": top_topic,
+            "confidence": llm_judgment.get("confidence", 0),
+            "reasoning": llm_judgment.get("reasoning", ""),
+            "signals_count": len(enriched),
+            "sources": list(set(s.get("source", "unknown") for s in enriched)),
+            "sample_signals": [s.get("content", "")[:100] for s in enriched[:3]],
+            "status": "pending",
+            "created_at": datetime.now(),
+            "expires_at": datetime.now() + timedelta(days=7)  # 7-day TTL
+        }
+        
+        result = db.pending_trends.insert_one(pending_doc)
+        approval_id = str(result.inserted_id)
+        
+        log.info(f"Pending Approval: Trend '{top_topic}' saved for review. ID: {approval_id}")
+        print(f"Pending approval (ID: {approval_id[:8]}...)")
+        
+        return {
+            "approval_id": approval_id,
+            "approval_status": "pending"
+        }
+    
+    except Exception as e:
+        log.error(f"Pending Approval failed: {e}")
+        print(f"Error: {e}")
+        return {
+            "approval_id": "",
+            "approval_status": "error"
+        }
+
+def discard_node(state: IntelligenceState) -> IntelligenceState:
+    """Discard low-confidence trends."""
+    print("Low confidence or not real. Discarding...")
+    
+    llm_judgment = state.get("llm_judgment", {})
+    confidence = llm_judgment.get("confidence", 0)
+    is_real = llm_judgment.get("is_real", False)
+    reasoning = llm_judgment.get("reasoning", "")
+    
+    log.info(f"Discarded: is_real={is_real}, confidence={confidence}. Reason: {reasoning}")
+    print(f"  Discarded: {reasoning[:50]}...")
+    
+    return {
+        "approval_id": "discarded",
+        "approval_status": "discarded"
+    }
+
+
 # --- Build the Graph ---
+
 workflow = StateGraph(IntelligenceState)
 
-# Add all nodes
 workflow.add_node("reddit_scout", reddit_scout_node)
 workflow.add_node("youtube_scout", youtube_scout_node)
 workflow.add_node("trends_scout", trends_scout_node)
@@ -280,6 +421,10 @@ workflow.add_node("merger", merger_node)
 workflow.add_node("router", router_node)
 workflow.add_node("analyzer", analyzer_node)
 workflow.add_node("llm_judgment", llm_judgment_node)
+workflow.add_node("decision_router", decision_router)
+workflow.add_node("auto_save", auto_save_node)
+workflow.add_node("pending_approval", pending_approval_node)
+workflow.add_node("discard", discard_node)
 
 # Entry point: Start all scouts in parallel
 workflow.set_entry_point("reddit_scout")
@@ -297,13 +442,29 @@ workflow.add_conditional_edges(
 )
 
 # STEP 4: LLM Judgment
-# After analysis, if explosions detected → send to LLM for verification
+# After analysis, if explosions detected, send to LLM for verification
 workflow.add_conditional_edges(
     "analyzer",
     conditional_llm_router,
     {"llm_judgment": "llm_judgment", "end": END}
 )
-workflow.add_edge("llm_judgment", END)
+
+# STEP 5: Three-Way Decision Router
+# Based on LLM confidence, route to: auto_save, pending_approval, or discard
+workflow.add_conditional_edges(
+    "llm_judgment",
+    decision_router,
+    {
+        "auto_save": "auto_save",
+        "pending_approval": "pending_approval",
+        "discard": "discard"
+    }
+)
+
+# All three paths converge at END
+workflow.add_edge("auto_save", END)
+workflow.add_edge("pending_approval", END)
+workflow.add_edge("discard", END)
 
 # Compile
 app = workflow.compile()
