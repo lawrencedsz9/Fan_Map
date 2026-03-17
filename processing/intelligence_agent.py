@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Dict, Any
+from typing import TypedDict, List, Dict, Any, Literal
 from langgraph.graph import StateGraph, END
 import logging
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -14,6 +14,7 @@ class IntelligenceState(TypedDict):
     reddit_signals: List[Dict[str, Any]]
     youtube_signals: List[Dict[str, Any]]
     trends_signals: List[Dict[str, Any]]
+    should_analyze: bool  # Router decision flag
 
 # --- Retry Decorator (handles transient failures) ---
 @retry(
@@ -107,8 +108,29 @@ def merger_node(state: IntelligenceState) -> IntelligenceState:
             log.info(f"Merger: Saved {len(merged)} signals to MongoDB")
         except Exception as e:
             log.warning(f"Merger: Failed to save signals: {e}")
+    else:
+        log.warning("Merger: No signals collected from any source")
     
     return {"raw_signals": merged}
+
+def router_node(state: IntelligenceState) -> IntelligenceState:
+    """Router: Decides whether to proceed with deep analysis.
+    
+    Logic:
+    - If raw_signals is empty → skip analysis (save costs)
+    - If raw_signals exists → proceed to deep analysis
+    """
+    print("Router: Deciding workflow path...")
+    raw = state.get("raw_signals", [])
+    
+    if not raw or len(raw) == 0:
+        log.info("Router: No signals detected. Skipping analysis to save costs.")
+        print("  No activity detected. Analysis skipped.")
+        return {"should_analyze": False, "enriched_signals": [], "is_exploding": False}
+    else:
+        log.info(f"Router: Activity detected ({len(raw)} signals). Routing to analyzer...")
+        print(f"  {len(raw)} signals found. Proceeding to analysis.")
+        return {"should_analyze": True}
 
 def analyzer_node(state: IntelligenceState) -> IntelligenceState:
     """The Analyst: Crushes raw ore into refined insights."""
@@ -134,8 +156,20 @@ def analyzer_node(state: IntelligenceState) -> IntelligenceState:
     if is_exploding:
         exploding_topics = [t for t, c in counts.items() if c > 5]
         log.info(f"Analyzer: Explosion detected! Topics: {exploding_topics}")
+        print(f"  Explosion detected: {exploding_topics}")
+    else:
+        log.info("Analyzer: No trend explosions detected")
+        print("  No explosions detected.")
     
     return {"enriched_signals": enriched, "is_exploding": is_exploding}
+
+def conditional_analyzer_router(state: IntelligenceState) -> Literal["analyzer", "end"]:
+    """Conditional edge: Route to analyzer or end based on signal availability."""
+    should_analyze = state.get("should_analyze", False)
+    if should_analyze:
+        return "analyzer"
+    else:
+        return "end"
 
 # --- Build the Graph ---
 workflow = StateGraph(IntelligenceState)
@@ -145,6 +179,7 @@ workflow.add_node("reddit_scout", reddit_scout_node)
 workflow.add_node("youtube_scout", youtube_scout_node)
 workflow.add_node("trends_scout", trends_scout_node)
 workflow.add_node("merger", merger_node)
+workflow.add_node("router", router_node)
 workflow.add_node("analyzer", analyzer_node)
 
 # Entry point: Start all scouts in parallel
@@ -152,7 +187,15 @@ workflow.set_entry_point("reddit_scout")
 workflow.add_edge("reddit_scout", "youtube_scout")
 workflow.add_edge("youtube_scout", "trends_scout")
 workflow.add_edge("trends_scout", "merger")
-workflow.add_edge("merger", "analyzer")
+workflow.add_edge("merger", "router")
+
+# STEP 3: Conditional Routing
+# Router decides: Analyze or End?
+workflow.add_conditional_edges(
+    "router",
+    conditional_analyzer_router,
+    {"analyzer": "analyzer", "end": END}
+)
 workflow.add_edge("analyzer", END)
 
 # Compile
