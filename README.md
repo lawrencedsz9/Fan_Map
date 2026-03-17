@@ -10,11 +10,14 @@ The default configuration ships with **anime titles as example topics**, but the
 
 ## Features
 
-- **Autonomous Intelligence Agent**: Powered by **LangGraph**, a state machine agent ("Scout" & "Analyzer") autonomously collects and scores trends.
-- **Multi-source attention signals**: Reddit, YouTube, Google Trends, and more (via pluggable collectors).
-- **Topic/entity extraction**: Uses NLP to enrich raw signals with entities and topics.
-- **Trend explosion detection**: Flags topics whose attention is spiking relative to a baseline.
-- **Web dashboard (FastAPI)**: Simple dashboard and API to inspect stats and the graph.
+- **LangGraph Agentic Workflow**: 13-node state machine orchestrating 5 sequential steps: parallel data collection, auto-retry logic, conditional routing, LLM judgment, and human-in-the-loop approval.
+- **Parallel Data Collection**: 3 concurrent scouts (Reddit RSS, YouTube API, Google Trends) with 3x exponential backoff retry on failure.
+- **Intelligent Routing**: Skips expensive analysis if no signals detected; routes medium-confidence trends to human review.
+- **LLM Judgment**: Gemini integration evaluates trend authenticity with confidence scoring.
+- **MongoDB Persistence**: Stores auto-approved trends, pending approvals, and historical signals.
+- **Topic/entity extraction**: Uses NLP and sentence-transformers for enrichment and explosion detection.
+- **FastAPI REST API**: Endpoints for trend inspection, pending approvals, and human approval workflow.
+- **Interactive Graph Visualization**: NetworkX-based knowledge graph with PyVis rendering.
 
 ---
 
@@ -40,23 +43,32 @@ The default configuration ships with **anime titles as example topics**, but the
    pip install -r requirements.txt
    ```
 
-4. **Configure environment variables**
+4. **Configure environment variables in `.env`**
 
-   - `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT`
-   - `YOUTUBE_API_KEY`
+   ```
+   REDDIT_CLIENT_ID=your_reddit_id
+   REDDIT_CLIENT_SECRET=your_reddit_secret
+   REDDIT_USER_AGENT=your_user_agent
+   YOUTUBE_API_KEY=your_youtube_key
+   GEMINI_API_KEY=your_gemini_key
+   MONGODB_URI=your_mongodb_connection_string
+   ```
+
+5. **Ensure MongoDB is running** (used for storing trends and pending approvals)
 
 ---
 
-## working structure
+## Working Structure
 
-setup with the main.py:
+LangGraph agentic pipeline with 5 steps:
 
-1. **Collect attention signals** (Reddit, YouTube, Trends, etc.).
-2. **Extract entities and topics** from the collected signals.
-3. **Build a knowledge graph** linking topics and signals.
-4. **Detect trend explosions** relative to historical baselines.
-5. **Render an interactive visualization** to `data/attention_graph.html`.
-6. **Optionally launch the dashboard** (FastAPI + HTML frontend).
+1. **Parallel Scouts** (Step 1-2): Reddit, YouTube, and Trends collectors run simultaneously with 3x auto-retry on failure, collecting raw attention signals.
+2. **Conditional Routing** (Step 3): Router checks signal count; if empty, skips analysis to save resources.
+3. **NLP Analysis** (Step 4): Enriches signals with entity extraction, topic clustering, and explosion detection (count > 5).
+4. **LLM Judgment** (Step 5): Gemini evaluates sample topics for authenticity and assigns confidence score.
+5. **Three-way Decision** (Step 6): High confidence (>0.85) auto-saves to trends, medium (0.60-0.85) routes to pending_approvals for human review, low (<0.60) discards.
+6. **MongoDB Persistence**: Final trends and pending approvals stored for dashboard and approval workflow.
+7. **Graph Building**: Generates NetworkX knowledge graph and PyVis visualization.
 
 ---
 
@@ -64,35 +76,37 @@ setup with the main.py:
 
 From the project root:
 
-- **working pipeline**
+- **Start the FastAPI server** (pipeline runs automatically on startup)
 
   ```bash
-  python main.py
+  uvicorn api.server:app --reload --port 8000
   ```
 
-- **Collect only**
+- **Trigger pipeline manually**
 
   ```bash
-  python main.py --collect
+  curl -X POST http://localhost:8000/api/refresh
   ```
 
-- **Build graph from cached signals**
+- **Check pending approvals** (trends awaiting human review)
 
   ```bash
-  python main.py --graph
+  curl http://localhost:8000/api/pending-approvals
   ```
 
-- **Launch dashboard only**
+- **Approve or reject a trend**
 
   ```bash
-  python main.py --serve
+  curl -X POST "http://localhost:8000/api/approve/{trend_id}?action=approve"
+  curl -X POST "http://localhost:8000/api/approve/{trend_id}?action=reject"
   ```
 
-When serving, the dashboard is available at:
+API available at:
 
-- Dashboard: `http://localhost:8000`
+- API: `http://localhost:8000/api/`
 - Graph: `http://localhost:8000/graph`
-- API: `http://localhost:8000/api/stats`
+- Stats: `http://localhost:8000/api/stats`
+- Dashboard: `http://localhost:8000` (served from `dashboard/index.html`)
 
 ---
 
