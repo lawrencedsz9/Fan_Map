@@ -23,6 +23,7 @@ uvicorn==0.29.0
 python-dotenv==1.0.1
 schedule==1.2.2
 rich==13.7.1
+tenacity==8.2.3
 
 # Database (MongoDB)
 pymongo==4.8.0

@@ -10,11 +10,10 @@ The default configuration ships with **anime titles as example topics**, but the
 
 ## Features
 
+- **Autonomous Intelligence Agent**: Powered by **LangGraph**, a state machine agent ("Scout" & "Analyzer") autonomously collects and scores trends.
 - **Multi-source attention signals**: Reddit, YouTube, Google Trends, and more (via pluggable collectors).
 - **Topic/entity extraction**: Uses NLP to enrich raw signals with entities and topics.
-- **Knowledge graph**: Builds a graph of topics, co-occurrences, and relationships.
 - **Trend explosion detection**: Flags topics whose attention is spiking relative to a baseline.
-- **Interactive visualization**: Generates an `attention_graph.html` file you can explore.
 - **Web dashboard (FastAPI)**: Simple dashboard and API to inspect stats and the graph.
 
 ---

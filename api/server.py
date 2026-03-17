@@ -9,6 +9,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -23,31 +24,37 @@ app = FastAPI(
     version="1.0.0",
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for local dev
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 _state: dict = {
     "graph": None,
     "stats": None,
     "trend_report": None,
     "signals": [],
-    "city_plan": [],
 }
 
 
 def _run_pipeline() -> None:
     """Execute the full collection → extraction → graph → trend pipeline."""
     import networkx as nx
-    from processing.city_agent import app as city_agent_app
+    from processing.intelligence_agent import app as intelligence_agent_app
     from processing.trend_detector import get_trend_report
     from graph.build_graph import build_graph, get_graph_stats
     from graph.visualize import render_graph
     from config import GRAPH_OUTPUT
 
-    log.info("Running pipeline with LangGraph City Agent...")
+    log.info("Running pipeline with LangGraph Intelligence Agent...")
     
-    # LangGraph Execution: Scout -> Analyzer -> Architect
-    result = city_agent_app.invoke({"raw_signals": []})
+    # LangGraph Execution: Scout -> Analyzer
+    result = intelligence_agent_app.invoke({"raw_signals": []})
     enriched = result.get("enriched_signals", [])
-    city_plan = result.get("city_plan", [])
 
     # Legacy Graph Building (for 2D dashboard)
     G = build_graph(enriched)
@@ -58,7 +65,6 @@ def _run_pipeline() -> None:
     _state["stats"] = get_graph_stats(G)
     _state["trend_report"] = report
     _state["signals"] = enriched
-    _state["city_plan"] = city_plan  # New 3D city data
 
 
 @app.on_event("startup")
@@ -116,15 +122,6 @@ async def graph_data():
 async def signals():
     """Get raw collected signals (last run)."""
     return JSONResponse(_state["signals"][:100])
-
-
-@app.get("/api/city")
-async def city_layout():
-    """Get the calculated 3D city layout coordinates."""
-    return JSONResponse({
-        "buildings": _state.get("city_plan", []),
-        "meta": {"timestamp": "now"}
-    })
 
 
 @app.get("/api/anime/{name}")
