@@ -1,6 +1,7 @@
 from typing import TypedDict, List, Dict, Any, Literal
 from langgraph.graph import StateGraph, END
 import logging
+import os
 from tenacity import retry, stop_after_attempt, wait_exponential
 from db.mongo_storage import save_signals
 
@@ -15,6 +16,7 @@ class IntelligenceState(TypedDict):
     youtube_signals: List[Dict[str, Any]]
     trends_signals: List[Dict[str, Any]]
     should_analyze: bool  # Router decision flag
+    llm_judgment: Dict[str, Any]  # LLM verdict on explosions
 
 # --- Retry Decorator (handles transient failures) ---
 @retry(
@@ -171,6 +173,102 @@ def conditional_analyzer_router(state: IntelligenceState) -> Literal["analyzer",
     else:
         return "end"
 
+def llm_judgment_node(state: IntelligenceState) -> IntelligenceState:
+    """LLM Judgment: Use Gemini to evaluate if explosions are real or noise.
+    
+    This node takes potential trend explosions detected by the Analyzer
+    and asks Claude to reason about them:
+    - Is this real hype, or bot spam?
+    - Are the signals authentic?
+    """
+    print("🧠 LLM Judgment: Evaluating trends with AI reasoning...")
+    
+    is_exploding = state.get("is_exploding", False)
+    enriched = state.get("enriched_signals", [])
+    
+    # If no explosions detected by simple logic, skip LLM
+    if not is_exploding:
+        log.info("LLM Judgment: No explosions to evaluate. Skipping.")
+        return {"llm_judgment": {"verdict": "no_explosions", "confidence": 1.0, "reasoning": "No trends exceeded threshold"}}
+    
+    # Extract explosion data
+    counts = {}
+    for s in enriched:
+        for t in s.get("matched_topics", []):
+            counts[t] = counts.get(t, 0) + 1
+    
+    exploding_topics = {t: c for t, c in counts.items() if c > 5}
+    
+    # Sample some snippets for context
+    sample_snippets = []
+    for signal in enriched[:5]:  # Sample first 5 signals
+        snippet = signal.get("content", "")[:100]
+        source = signal.get("source", "unknown")
+        sample_snippets.append(f"[{source}] {snippet}")
+    
+    # Build the prompt
+    prompt = f"""You are an AI analyst evaluating internet trends. Analyze the following trend explosion and determine if it's real hype or noise.
+
+**Detected Explosion:**
+Topics: {list(exploding_topics.keys())}
+Mention Counts: {exploding_topics}
+
+**Sample Signals:**
+{chr(10).join(sample_snippets)}
+
+**Your Task:**
+1. Is this trend explosion REAL (authentic hype from genuine interest)?
+2. What's your confidence level (0.0-1.0)?
+3. Why? (brief reasoning)
+
+Respond in JSON format:
+{{"is_real": true/false, "confidence": 0.0-1.0, "reasoning": "brief explanation"}}"""
+    
+    try:
+        import google.generativeai as genai
+        
+        # Load API key from environment
+        gemini_api_key = os.getenv("GEMINI_API_KEY")
+        if not gemini_api_key:
+            log.warning("LLM Judgment: GEMINI_API_KEY not found in environment")
+            return {"llm_judgment": {"verdict": "skipped", "reason": "No API key"}}
+        
+        genai.configure(api_key=gemini_api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        
+        response = model.generate_content(prompt)
+        response_text = response.text
+        
+        # Parse JSON response
+        import json
+        import re
+        
+        # Extract JSON from response
+        json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+        if json_match:
+            verdict = json.loads(json_match.group())
+        else:
+            verdict = {"is_real": False, "confidence": 0.5, "reasoning": "Could not parse LLM response"}
+        
+        log.info(f"LLM Judgment: {verdict}")
+        print(f"  Verdict: {'✅ REAL HYPE' if verdict.get('is_real') else '❌ LIKELY NOISE'}")
+        print(f"  Confidence: {verdict.get('confidence', 0):.2f}")
+        print(f"  Reason: {verdict.get('reasoning', 'N/A')}")
+        
+        return {"llm_judgment": verdict}
+    
+    except Exception as e:
+        log.warning(f"LLM Judgment failed: {e}")
+        return {"llm_judgment": {"verdict": "error", "reason": str(e)}}
+
+def conditional_llm_router(state: IntelligenceState) -> Literal["llm_judgment", "end"]:
+    """Conditional edge: Route to LLM judgment if explosions detected, else end."""
+    is_exploding = state.get("is_exploding", False)
+    if is_exploding:
+        return "llm_judgment"
+    else:
+        return "end"
+
 # --- Build the Graph ---
 workflow = StateGraph(IntelligenceState)
 
@@ -181,6 +279,7 @@ workflow.add_node("trends_scout", trends_scout_node)
 workflow.add_node("merger", merger_node)
 workflow.add_node("router", router_node)
 workflow.add_node("analyzer", analyzer_node)
+workflow.add_node("llm_judgment", llm_judgment_node)
 
 # Entry point: Start all scouts in parallel
 workflow.set_entry_point("reddit_scout")
@@ -196,7 +295,15 @@ workflow.add_conditional_edges(
     conditional_analyzer_router,
     {"analyzer": "analyzer", "end": END}
 )
-workflow.add_edge("analyzer", END)
+
+# STEP 4: LLM Judgment
+# After analysis, if explosions detected → send to LLM for verification
+workflow.add_conditional_edges(
+    "analyzer",
+    conditional_llm_router,
+    {"llm_judgment": "llm_judgment", "end": END}
+)
+workflow.add_edge("llm_judgment", END)
 
 # Compile
 app = workflow.compile()
