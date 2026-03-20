@@ -177,12 +177,14 @@ def conditional_analyzer_router(state: IntelligenceState) -> Literal["analyzer",
         return "end"
 
 def llm_judgment_node(state: IntelligenceState) -> IntelligenceState:
-    """LLM Judgment: Use Gemini to evaluate if explosions are real or noise.
+    """LLM Judgment: Use AI Modelto evaluate if explosions are real or noise.
     
     This node takes potential trend explosions detected by the Analyzer
-    and asks Claude to reason about them:
+    and asks the agent to reason about them:
     - Is this real hype, or bot spam?
     - Are the signals authentic?
+    
+    FALLBACK: If LLM error occurs, uses analyzer result as fallback.
     """
     print("Evaluating trends with AI reasoning...")
     
@@ -219,28 +221,30 @@ Mention Counts: {exploding_topics}
 **Sample Signals:**
 {chr(10).join(sample_snippets)}
 
-
-Respond in JSON format:
+Respond in JSON format only (no other text):
 {{"is_real": true/false, "confidence": 0.0-1.0, "reasoning": "brief explanation"}}"""
     
     try:
-        import google.generativeai as genai
-        
-        # Load API key from environment
-        gemini_api_key = os.getenv("GEMINI_API_KEY")
-        if not gemini_api_key:
-            log.warning("LLM Judgment: GEMINI_API_KEY not found in environment")
-            return {"llm_judgment": {"verdict": "skipped", "reason": "No API key"}}
-        
-        genai.configure(api_key=gemini_api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        
-        response = model.generate_content(prompt)
-        response_text = response.text
-        
-        # Parse JSON response
+        from groq import Groq
         import json
         import re
+        
+        # Load API key from environment
+        groq_api_key = os.getenv("Groq")
+        if not groq_api_key:
+            log.warning("LLM Judgment: Groq API key not found in environment")
+            # Fallback to analyzer result
+            return {"llm_judgment": {"is_real": True, "confidence": 0.70, "reasoning": "No API key. Using analyzer result."}}
+        
+        client = Groq(api_key=groq_api_key)
+        
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=300,
+            temperature=0.7
+        )
+        response_text = response.choices[0].message.content
         
         # Extract JSON from response
         json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
@@ -250,15 +254,29 @@ Respond in JSON format:
             verdict = {"is_real": False, "confidence": 0.5, "reasoning": "Could not parse LLM response"}
         
         log.info(f"LLM Judgment: {verdict}")
-        print(f"  Verdict: {'REAL HYPE' if verdict.get('is_real') else '❌ LIKELY NOISE'}")
+        print(f"  Verdict: {'REAL HYPE' if verdict.get('is_real') else 'LIKELY NOISE'}")
         print(f"  Confidence: {verdict.get('confidence', 0):.2f}")
         print(f"  Reason: {verdict.get('reasoning', 'N/A')}")
         
         return {"llm_judgment": verdict}
     
     except Exception as e:
+        error_msg = str(e)
         log.warning(f"LLM Judgment failed: {e}")
-        return {"llm_judgment": {"verdict": "error", "reason": str(e)}}
+        
+        # Fallback to pending approval on any error
+        log.info(f"LLM Judgment: Error encountered, using fallback logic based on analyzer result")
+        print(f"  LLM error. Using analyzer result as fallback.")
+        
+        fallback_verdict = {
+            "is_real": True,  # Assume it's real (let human decide)
+            "confidence": 0.70,  # Medium confidence triggers pending_approval
+            "reasoning": f"LLM error ({error_msg[:50]}...). Using analyzer explosion detection. Pending human review.",
+            "is_fallback": True
+        }
+        
+        log.info(f"LLM Judgment Fallback: {fallback_verdict}")
+        return {"llm_judgment": fallback_verdict}
 
 def conditional_llm_router(state: IntelligenceState) -> Literal["llm_judgment", "end"]:
     """Conditional edge: Route to LLM judgment if explosions detected, else end."""
