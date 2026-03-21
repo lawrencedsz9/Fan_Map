@@ -34,7 +34,7 @@ The default configuration ships with **anime titles as example topics**, but the
    ```bash
    python -m venv .venv
    .venv\Scripts\activate  # Windows
-   # source .venv/bin/activate  # macOS / Linux
+   # source .venv/bin/activate  
    ```
 
 3. **Install dependencies**
@@ -46,12 +46,10 @@ The default configuration ships with **anime titles as example topics**, but the
 4. **Configure environment variables in `.env`**
 
    ```
-   REDDIT_CLIENT_ID=your_reddit_id
-   REDDIT_CLIENT_SECRET=your_reddit_secret
-   REDDIT_USER_AGENT=your_user_agent
    YOUTUBE_API_KEY=your_youtube_key
-   GEMINI_API_KEY=your_gemini_key
+   Groq=your_groq_key
    MONGODB_URI=your_mongodb_connection_string
+   MONGODB_DB_NAME=fanmap
    ```
 
 5. **Ensure MongoDB is running** (used for storing trends and pending approvals)
@@ -76,7 +74,7 @@ LangGraph agentic pipeline with 5 steps:
 
 From the project root:
 
-- **Start the FastAPI server** (pipeline runs automatically on startup)
+- **Start the FastAPI server** 
 
   ```bash
   uvicorn api.server:app --reload --port 8000
@@ -106,7 +104,7 @@ API available at:
 - API: `http://localhost:8000/api/`
 - Graph: `http://localhost:8000/graph`
 - Stats: `http://localhost:8000/api/stats`
-- Dashboard: `http://localhost:8000` (served from `dashboard/index.html`)
+- Dashboard: `http://localhost:8000` 
 
 ---
 

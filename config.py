@@ -12,11 +12,6 @@ DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
 GRAPH_OUTPUT = DATA_DIR / "attention_graph.html"
 
-# Reddit
-REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID", "")
-REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET", "")
-REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "fandom-intelligence-bot/1.0")
-
 # YouTube
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
 
