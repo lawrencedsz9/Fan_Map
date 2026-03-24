@@ -1,570 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fandom Intelligence Graph</title>
-<style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --border: #1e1e2e;
-    --text: #e0e0e0;
-    --muted: #666;
-    --accent: #ff6b6b;
-    --accent2: #4ecdc4;
-    --accent3: #45b7d1;
-    --accent4: #ffd93d;
-    --green: #00ff88;
-    --purple: #a855f7;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Segoe UI', -apple-system, sans-serif;
-    min-height: 100vh;
-  }
-
-  /* ── Header ───────────────────────────────────── */
-  .header {
-    background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
-    border-bottom: 1px solid var(--border);
-    padding: 20px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    backdrop-filter: blur(20px);
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .pulse-dot {
-    width: 10px;
-    height: 10px;
-    background: var(--green);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-    box-shadow: 0 0 10px var(--green);
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
-  }
-
-  .header h1 {
-    font-size: 22px;
-    background: linear-gradient(135deg, var(--accent), var(--accent4));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 700;
-  }
-
-  .header .subtitle {
-    color: var(--muted);
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .refresh-btn {
-    background: var(--accent);
-    color: #000;
-    border: none;
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-weight: 700;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-  }
-  .refresh-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,107,107,0.4); }
-  .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* ── Layout ───────────────────────────────────── */
-  .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 24px;
-  }
-
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    transition: all 0.2s;
-  }
-  .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-
-  .stat-value {
-    font-size: 36px;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-  .stat-label {
-    color: var(--muted);
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  /* ── Grid sections ────────────────────────────── */
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-bottom: 24px;
-  }
-
-  @media (max-width: 900px) {
-    .grid { grid-template-columns: 1fr; }
-  }
-
-  .panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .panel-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 15px;
-  }
-
-  .panel-body {
-    padding: 16px 20px;
-    max-height: 500px;
-    overflow-y: auto;
-  }
-
-  /* ── Rankings ──────────────────────────────────── */
-  .ranking-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .ranking-item:last-child { border-bottom: none; }
-
-  .rank-badge {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 14px;
-    flex-shrink: 0;
-  }
-  .rank-1 { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; }
-  .rank-2 { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: #000; }
-  .rank-3 { background: linear-gradient(135deg, #cd7f32, #a0622e); color: #fff; }
-  .rank-other { background: var(--border); color: var(--muted); }
-
-  .rank-info { flex: 1; }
-  .rank-name { font-weight: 700; font-size: 15px; }
-  .rank-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
-
-  .attention-bar-wrap {
-    width: 120px;
-    height: 6px;
-    background: var(--border);
-    border-radius: 3px;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-  .attention-bar {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.5s;
-  }
-
-  .score-value {
-    font-weight: 800;
-    font-size: 16px;
-    width: 50px;
-    text-align: right;
-    flex-shrink: 0;
-  }
-
-  /* ── Explosions ────────────────────────────────── */
-  .explosion-item {
-    padding: 14px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    border-left: 4px solid;
-    background: rgba(255, 107, 107, 0.05);
-  }
-  .explosion-mega { border-color: #ff0040; background: rgba(255, 0, 64, 0.08); }
-  .explosion-viral { border-color: #ff6b6b; }
-  .explosion-exploding { border-color: var(--accent4); }
-  .explosion-rising { border-color: var(--accent3); }
-
-  .explosion-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
-  }
-  .explosion-topic { font-weight: 800; font-size: 16px; }
-  .explosion-badge {
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  .badge-mega { background: #ff0040; color: #fff; animation: glow 1.5s infinite; }
-  .badge-viral { background: var(--accent); color: #000; }
-  .badge-exploding { background: var(--accent4); color: #000; }
-  .badge-rising { background: var(--accent3); color: #000; }
-
-  @keyframes glow {
-    0%, 100% { box-shadow: 0 0 5px #ff0040; }
-    50% { box-shadow: 0 0 20px #ff0040, 0 0 40px rgba(255,0,64,0.3); }
-  }
-
-  .explosion-stats {
-    color: var(--muted);
-    font-size: 13px;
-    display: flex;
-    gap: 16px;
-  }
-
-  /* ── Signals ───────────────────────────────────── */
-  .signal-item {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-  }
-  .signal-item:last-child { border-bottom: none; }
-
-  .signal-source {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-weight: 600;
-    text-transform: uppercase;
-    display: inline-block;
-    margin-bottom: 4px;
-  }
-  .source-reddit { background: #ff4500; color: #fff; }
-  .source-youtube { background: #ff0000; color: #fff; }
-  .source-google_trends { background: #4285f4; color: #fff; }
-
-  .signal-title { color: var(--text); line-height: 1.4; }
-  .signal-topics { color: var(--accent2); font-size: 11px; margin-top: 3px; }
-
-  /* ── Graph link ────────────────────────────────── */
-  .graph-link {
-    display: block;
-    text-align: center;
-    padding: 20px;
-    background: linear-gradient(135deg, var(--surface), #1a1a2e);
-    border: 2px dashed var(--border);
-    border-radius: 16px;
-    margin-bottom: 24px;
-    text-decoration: none;
-    transition: all 0.3s;
-  }
-  .graph-link:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 30px rgba(255,107,107,0.1);
-    transform: translateY(-2px);
-  }
-  .graph-link-title {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--accent);
-    margin-bottom: 4px;
-  }
-  .graph-link-sub {
-    color: var(--muted);
-    font-size: 13px;
-  }
-
-  /* ── Node types ────────────────────────────────── */
-  .node-types {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .node-type {
-    padding: 6px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    background: var(--border);
-  }
-
-  /* ── Loading ───────────────────────────────────── */
-  .loading {
-    text-align: center;
-    padding: 60px;
-    color: var(--muted);
-  }
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 16px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── Scrollbar ─────────────────────────────────── */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fandom Intelligence Graph</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Righteous&family=Rubik:wght@400;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/css/main.css">
 </head>
 <body>
-
-<div class="header">
-  <div class="header-left">
-    <div class="pulse-dot"></div>
-    <div>
-      <h1>Fandom Intelligence Graph</h1>
-      <div class="subtitle">Real-Time Internet Attention Map</div>
-    </div>
-  </div>
-  <button class="refresh-btn" onclick="refresh()">Refresh Data</button>
-</div>
-
-<div class="container">
-  <!-- Stats row -->
-  <div class="stats-row" id="stats-row">
-    <div class="stat-card"><div class="spinner"></div></div>
-  </div>
-
-  <!-- Graph link -->
-  <a href="/graph" target="_blank" class="graph-link">
-    <div class="graph-link-title">Open Interactive Knowledge Graph</div>
-    <div class="graph-link-sub">Explore the full attention network in an interactive 3D-style visualization</div>
-  </a>
-
-  <!-- Main grid -->
-  <div class="grid">
-    <!-- Rankings -->
-    <div class="panel">
-      <div class="panel-header">Anime Attention Rankings</div>
-      <div class="panel-body" id="rankings">
-        <div class="loading"><div class="spinner"></div>Loading...</div>
+  <div id="app">
+    <div class="header">
+      <div class="header-left">
+        <div class="pulse-dot"></div>
+        <div>
+          <h1 class="header-title">Fandom Intelligence Graph</h1>
+          <div class="header-subtitle">Real-Time Internet Attention Map</div>
+        </div>
       </div>
+      <button class="btn-arcade" id="refresh-btn">Refresh Data</button>
     </div>
 
-    <!-- Explosions -->
-    <div class="panel">
-      <div class="panel-header">Trend Explosion Detector</div>
-      <div class="panel-body" id="explosions">
-        <div class="loading"><div class="spinner"></div>Scanning...</div>
+    <div class="container">
+      <!-- Stats row -->
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card"><div class="spinner"></div></div>
       </div>
-    </div>
-  </div>
 
-  <!-- Signals -->
-  <div class="panel">
-    <div class="panel-header">Latest Signals</div>
-    <div class="panel-body" id="signals" style="max-height: 400px;">
-      <div class="loading"><div class="spinner"></div>Collecting...</div>
-    </div>
-  </div>
-</div>
+      <!-- Graph link -->
+      <a href="/graph" target="_blank" class="graph-link">
+        <div class="graph-link-title">Open Interactive Knowledge Graph</div>
+        <div class="graph-link-sub">Explore the full attention network in an interactive 3D-style visualization</div>
+      </a>
 
-<script>
-const API = '';
-
-async function loadDashboard() {
-  try {
-    const [statsRes, trendsRes, signalsRes] = await Promise.all([
-      fetch(`${API}/api/stats`),
-      fetch(`${API}/api/trends`),
-      fetch(`${API}/api/signals`),
-    ]);
-
-    const stats = await statsRes.json();
-    const trends = await trendsRes.json();
-    const signals = await signalsRes.json();
-
-    renderStats(stats);
-    renderRankings(stats.rankings || []);
-    renderExplosions(trends.explosions || [], trends);
-    renderSignals(signals);
-  } catch (e) {
-    console.error('Failed to load dashboard', e);
-  }
-}
-
-function renderStats(stats) {
-  const types = stats.node_types || {};
-  document.getElementById('stats-row').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-value" style="color: var(--accent)">${stats.anime_count || 0}</div>
-      <div class="stat-label">Anime Tracked</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value" style="color: var(--accent2)">${stats.total_nodes || 0}</div>
-      <div class="stat-label">Graph Nodes</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value" style="color: var(--accent3)">${stats.total_edges || 0}</div>
-      <div class="stat-label">Connections</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value" style="color: var(--accent4)">${types.Character || 0}</div>
-      <div class="stat-label">Characters Found</div>
-    </div>
-  `;
-}
-
-function renderRankings(rankings) {
-  if (!rankings || !rankings.length) {
-    document.getElementById('rankings').innerHTML = '<div class="loading">No data yet</div>';
-    return;
-  }
-
-  const maxScore = Math.max(...rankings.map(r => r.attention_score || 0));
-
-  document.getElementById('rankings').innerHTML = rankings.map((r, i) => {
-    const pct = maxScore > 0 ? ((r.attention_score || 0) / maxScore) * 100 : 0;
-    const hue = 120 - (i / rankings.length) * 120;
-    const rankClass = i < 3 ? `rank-${i + 1}` : 'rank-other';
-    const rank = i + 1;
-
-    return `
-      <div class="ranking-item">
-        <div class="rank-badge ${rankClass}">${rank}</div>
-        <div class="rank-info">
-          <div class="rank-name">${r.anime || 'Unknown'}</div>
-          <div class="rank-meta">
-            Reddit: ${r.reddit_mentions || 0} &middot;
-            YouTube: ${r.youtube_mentions || 0} &middot;
-            Trends: ${r.google_trends_score || 0}
+      <!-- Main grid -->
+      <div class="panels-grid">
+        <!-- Rankings -->
+        <div class="panel">
+          <div class="panel-header">Anime Attention Rankings</div>
+          <div class="panel-body" id="rankings">
+            <div class="loading"><div class="spinner"></div>Loading...</div>
           </div>
         </div>
-        <div class="attention-bar-wrap">
-          <div class="attention-bar" style="width:${pct}%; background: hsl(${hue}, 70%, 55%)"></div>
-        </div>
-        <div class="score-value" style="color: hsl(${hue}, 70%, 55%)">${((r.attention_score || 0) * 100).toFixed(0)}</div>
-      </div>
-    `;
-  }).join('');
-}
 
-function renderExplosions(explosions, trends) {
-  if (!explosions.length) {
-    const tracked = trends.topics_tracked || 0;
-    document.getElementById('explosions').innerHTML = `
-      <div style="text-align:center; padding: 40px; color: var(--muted)">
-        <div style="font-weight: 600; margin-bottom: 4px;">No explosions detected (yet)</div>
-        <div style="font-size: 13px;">Monitoring ${tracked} topics &mdash; run more collection cycles to build baseline data</div>
-      </div>
-    `;
-    return;
-  }
-
-  document.getElementById('explosions').innerHTML = explosions.map(e => {
-    const v = e.verdict.toLowerCase().replace(/\s+/g, '-');
-    let badgeClass = 'badge-rising';
-    let itemClass = 'explosion-rising';
-    if (v.includes('mega')) { badgeClass = 'badge-mega'; itemClass = 'explosion-mega'; }
-    else if (v.includes('viral')) { badgeClass = 'badge-viral'; itemClass = 'explosion-viral'; }
-    else if (v.includes('exploding')) { badgeClass = 'badge-exploding'; itemClass = 'explosion-exploding'; }
-
-    return `
-      <div class="explosion-item ${itemClass}">
-        <div class="explosion-header">
-          <span class="explosion-topic">${e.topic}</span>
-          <span class="explosion-badge ${badgeClass}">${e.verdict}</span>
-        </div>
-        <div class="explosion-stats">
-          <span>${e.explosion_ratio}x baseline</span>
-          <span>Current: ${e.current_mentions}</span>
-          <span>Avg: ${e.baseline_average}</span>
+        <!-- Explosions -->
+        <div class="panel">
+          <div class="panel-header">Trend Explosion Detector</div>
+          <div class="panel-body" id="explosions">
+            <div class="loading"><div class="spinner"></div>Scanning...</div>
+          </div>
         </div>
       </div>
-    `;
-  }).join('');
-}
 
-function renderSignals(signals) {
-  if (!signals || !signals.length) {
-    document.getElementById('signals').innerHTML = '<div class="loading">No signals collected</div>';
-    return;
-  }
-
-  document.getElementById('signals').innerHTML = signals.slice(0, 40).map(s => {
-    const src = s.source || 'unknown';
-    const srcClass = `source-${src}`;
-    const title = s.title || s.topic || 'Unknown';
-    const topics = (s.matched_topics || []).join(', ');
-
-    return `
-      <div class="signal-item">
-        <span class="signal-source ${srcClass}">${src}</span>
-        <div class="signal-title">${escapeHtml(title)}</div>
-        ${topics ? `<div class="signal-topics">${escapeHtml(topics)}</div>` : ''}
+      <!-- Signals -->
+      <div class="panel">
+        <div class="panel-header">Latest Signals</div>
+        <div class="panel-body" id="signals" style="max-height: 400px;">
+          <div class="loading"><div class="spinner"></div>Collecting...</div>
+        </div>
       </div>
-    `;
-  }).join('');
-}
+    </div>
+  </div>
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-async function refresh() {
-  const btn = document.querySelector('.refresh-btn');
-  btn.disabled = true;
-  btn.textContent = 'Refreshing...';
-
-  try {
-    await fetch(`${API}/api/refresh`, { method: 'POST' });
-    await loadDashboard();
-  } catch (e) {
-    console.error('Refresh failed', e);
-  }
-
-  btn.disabled = false;
-  btn.textContent = 'Refresh Data';
-}
-
-// Initial load
-loadDashboard();
-</script>
+  <script type="module" src="./src/js/main.js"></script>
 </body>
 </html>
+

@@ -1,0 +1,381 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-ghibli-bg text-ghibli-dark font-sans;
+    background-image: 
+      url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAA120lEQVQIHWP4z+DwH0ghyMDAwMDAwMDg4ODAf/J/Bv4DAAD//wMCACoBAkcb8sUiYGBg+M/wn4GBgf8/AwMDAwP//xkYGP7/ZwAyGABk/hnIM/xnYPjPwPI/FQOrOgYGBgaGf4wMDg8ZGP4z/GdgYGBg+P+fgYGBgQGZnIGBgQGZhoGBgQGZioGBgQGZhYGBgQGZmYGBgQGZlYGBgQGZn4GBgQGZj4GBgQGZgYGBgQGZiYGBgQGZhYGBgQGZjYGBgQGZjYGBgQGZk4GBgQGZk4GBgQGZj4GBgQGZi4GBgQGZk4GBgQGZjYGBgQGZi4GBgQGZh4GBgQGZi4GBgQGZi4GBgQGZi4GBgQGZi4GBgQGZhYGBgQGZhYGBgQGZi4GBgQGZi4GBgQGZi4GBgQGZi4GBgQGZi4GBgQGZi4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZi4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4HBgQGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYHBgQGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYLg4MDAQOBOZ4YAAvAgAAAAqQVFjdQQAAgAA');
+    background-repeat: repeat;
+    background-size: 2px 2px;
+    
+  }
+  
+  * {
+    @apply transition-all duration-100;
+  }
+}
+
+/* ── Header ───────────────────────────────────── */
+.header {
+  @apply sticky top-0 z-50 bg-gradient-to-r from-ghibli-darker via-ghibli-light to-ghibli-darker;
+  @apply border-4 border-ghibli-forest border-b-[6px] border-b-ghibli-water;
+  @apply px-8 py-5 flex items-center justify-between;
+  @apply shadow-ghibli-lg;
+}
+
+.header-left {
+  @apply flex items-center gap-4;
+}
+
+.pulse-dot {
+  @apply w-3 h-3 bg-ghibli-forest border-2 border-ghibli-water;
+  @apply animate-pulse shadow-ghibli-forest;
+}
+
+.header h1 {
+  @apply text-4xl font-black text-ghibli-water;
+  @apply tracking-wider;
+  @apply drop-shadow-[2px_2px_0px_#6B8E6F];
+  font-family: 'Fredoka One', sans-serif;
+}
+
+.header .subtitle {
+  @apply text-sm font-bold text-ghibli-gold uppercase;
+  @apply tracking-widest;
+}
+
+.refresh-btn {
+  @apply px-7 py-3 font-black uppercase text-sm tracking-wide;
+  @apply bg-gradient-to-r from-ghibli-forest to-ghibli-leaf;
+  @apply text-ghibli-white border-3 border-ghibli-peach;
+  @apply shadow-ghibli hover:shadow-ghibli-lg;
+  @apply active:shadow-none active:translate-x-0.5 active:translate-y-0.5;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  font-family: 'Righteous', sans-serif;
+}
+
+/* ── Layout ───────────────────────────────────── */
+.container {
+  @apply max-w-6xl mx-auto p-6;
+}
+
+.stats-row {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6;
+}
+
+.stat-card {
+  @apply bg-gradient-to-br from-ghibli-cream to-ghibli-darker;
+  @apply border-3 border-ghibli-gold;
+  @apply shadow-ghibli;
+  @apply p-5 text-center;
+  @apply relative;
+  @apply hover:border-ghibli-water hover:-translate-y-0.5 hover:shadow-ghibli-lg;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stat-value {
+  @apply text-6xl font-black text-ghibli-gold;
+  @apply drop-shadow-[2px_2px_0px_#6B8E6F];
+  @apply mb-2;
+  font-family: 'Fredoka One', sans-serif;
+}
+
+.stat-label {
+  @apply text-base font-bold uppercase tracking-widest;
+  @apply text-ghibli-water;
+}
+
+/* ── Grid sections ────────────────────────────── */
+.panels-grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6;
+}
+
+.panel {
+  @apply bg-gradient-to-br from-ghibli-cream to-ghibli-darker;
+  @apply border-3 border-ghibli-water;
+  @apply shadow-ghibli-lg;
+  @apply overflow-hidden;
+}
+
+.panel-header {
+  @apply px-5 py-4 font-black text-lg uppercase tracking-wider;
+  @apply bg-gradient-to-r from-[rgba(107,142,111,0.1)] to-[rgba(122,175,184,0.1)];
+  @apply border-b-3 border-b-ghibli-forest;
+  @apply text-ghibli-dark;
+  font-family: 'Righteous', sans-serif;
+}
+
+.panel-body {
+  @apply p-5 max-h-96 overflow-y-auto;
+}
+
+/* ── Rankings ──────────────────────────────────── */
+.ranking-item {
+  @apply flex items-center gap-4;
+  @apply p-3 mb-2;
+  @apply border-2 border-ghibli-water;
+  @apply bg-[rgba(122,175,184,0.08)];
+}
+
+.ranking-item:last-child {
+  @apply mb-0;
+}
+
+.rank-badge {
+  @apply w-12 h-12 flex items-center justify-center;
+  @apply font-black text-lg;
+  @apply border-2 border-ghibli-forest;
+  @apply shadow-ghibli;
+  @apply flex-shrink-0;
+  font-family: 'Fredoka One', sans-serif;
+}
+
+.rank-1 {
+  @apply bg-ghibli-gold text-ghibli-darker;
+}
+
+.rank-2 {
+  @apply bg-ghibli-water text-ghibli-darker;
+}
+
+.rank-3 {
+ @apply bg-ghibli-peach text-ghibli-darker;
+}
+
+.rank-other {
+  @apply bg-ghibli-forest text-ghibli-cream;
+}
+
+.rank-info {
+  @apply flex-1;
+}
+
+.rank-name {
+  @apply font-black text-lg uppercase tracking-wider text-ghibli-dark;
+  font-family: 'Righteous', sans-serif;
+}
+
+.rank-meta {
+  @apply text-sm text-ghibli-gold;
+  @apply mt-1 tracking-wider;
+}
+
+.attention-bar-wrap {
+  @apply w-36 h-4 bg-ghibli-light border-2 border-ghibli-water;
+  @apply overflow-hidden flex-shrink-0;
+  @apply shadow-[inset_0_2px_5px_rgba(0,0,0,0.1)];
+}
+
+.attention-bar {
+  @apply h-full bg-gradient-to-r from-ghibli-forest via-ghibli-gold to-ghibli-water;
+  @apply shadow-[inset_-2px_0_0_rgba(0,0,0,0.5)];
+  @apply transition-all duration-500;
+}
+
+.score-value {
+  @apply font-black text-base;
+  @apply w-16 text-right flex-shrink-0;
+  @apply drop-shadow-[2px_2px_0px_#000000];
+  font-family: 'Fredoka One', sans-serif;
+}
+
+/* ── Explosions ────────────────────────────────── */
+.explosion-item {
+  @apply p-3 mb-2 border-3;
+  @apply shadow-ghibli;
+  @apply relative;
+}
+
+.explosion-mega {
+  @apply border-ghibli-coral bg-[rgba(217,122,98,0.1)];
+}
+
+.explosion-viral {
+  @apply border-ghibli-coral bg-[rgba(217,122,98,0.1)];
+}
+
+.explosion-exploding {
+  @apply border-ghibli-peach bg-[rgba(232,155,122,0.1)];
+}
+
+.explosion-rising {
+  @apply border-ghibli-water bg-[rgba(122,175,184,0.08)];
+}
+
+.explosion-header {
+  @apply flex items-center justify-between gap-4 mb-2;
+}
+
+.explosion-topic {
+  @apply font-black text-lg uppercase tracking-wider text-ghibli-dark;
+  font-family: 'Righteous', sans-serif;
+}
+
+.explosion-badge {
+  @apply text-sm px-3 py-1 font-black uppercase tracking-wider;
+  @apply border-2 shadow-[2px_2px_0px_#000000];
+}
+
+.badge-mega {
+  @apply bg-ghibli-coral text-ghibli-cream border-ghibli-white;
+  @apply animate-[pulse_0.6s_infinite];
+}
+
+.badge-viral {
+  @apply bg-ghibli-coral text-ghibli-cream border-ghibli-white;
+}
+
+.badge-exploding {
+  @apply bg-ghibli-peach text-ghibli-darker border-ghibli-dark;
+}
+
+.badge-rising {
+  @apply bg-ghibli-water text-ghibli-darker border-ghibli-dark;
+}
+
+.explosion-stats {
+  @apply text-sm text-ghibli-dark font-bold uppercase;
+  @apply flex gap-4;
+}
+
+/* ── Signals ───────────────────────────────────── */
+.signal-item {
+  @apply p-3 mb-2 border-2 border-ghibli-water;
+  @apply bg-[rgba(122,175,184,0.05)];
+  @apply text-sm;
+}
+
+.signal-item:last-child {
+  @apply mb-0;
+}
+
+.signal-source {
+  @apply text-sm px-2.5 py-1 font-black uppercase;
+  @apply inline-block mb-1 border-2;
+}
+
+.source-reddit {
+  @apply bg-[#ff4500] text-ghibli-cream border-ghibli-white;
+}
+
+.source-youtube {
+  @apply bg-red-600 text-ghibli-cream border-ghibli-white;
+}
+
+.source-google_trends {
+  @apply bg-[#4285f4] text-ghibli-cream border-ghibli-white;
+}
+
+.signal-title {
+  @apply text-ghibli-dark font-bold text-base;
+  @apply leading-relaxed;
+}
+
+.signal-topics {
+  @apply text-sm text-ghibli-gold font-bold uppercase;
+  @apply mt-1 tracking-widest;
+}
+
+/* ── Graph link ────────────────────────────────── */
+.graph-link {
+  @apply block text-center p-6;
+  @apply bg-gradient-to-br from-ghibli-sky to-ghibli-water;
+  @apply border-4 border-dashed border-ghibli-coral;
+  @apply mb-6 shadow-ghibli-lg;
+  @apply hover:border-ghibli-water hover:-translate-y-0.5 hover:shadow-ghibli-xl;
+  @apply no-underline;
+}
+
+.graph-link-title {
+  @apply text-2xl font-black text-ghibli-dark;
+  @apply uppercase tracking-widest mb-2;
+  @apply drop-shadow-[3px_3px_0px_rgba(107,142,111,0.2)];
+  font-family: 'Fredoka One', sans-serif;
+}
+
+.graph-link-sub {
+  @apply text-sm text-ghibli-dark tracking-wide;
+}
+
+/* ── Loading & Misc ─────────────────────────────– */
+.spinner {
+  @apply w-10 h-10 border-3 border-ghibli-water;
+  @apply border-t-ghibli-coral;
+  @apply animate-spin;
+}
+
+.loading {
+  @apply text-center py-16 text-ghibli-gold;
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.5) rotate(-5deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  0% { opacity: 1; visibility: visible; }
+  80% { opacity: 1; visibility: visible; pointer-events: none; }
+  100% { opacity: 0; pointer-events: none; visibility: hidden; z-index: -1; }
+}
+
+@keyframes type {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes fill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+@keyframes explosion {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+/* ── Scrollbar ─────────────────────────────────── */
+::-webkit-scrollbar {
+  @apply w-2.5;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-ghibli-light border-2 border-ghibli-water;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-ghibli-forest border-2 border-ghibli-water;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-ghibli-water;
+}
+
+
+
