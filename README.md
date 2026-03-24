@@ -108,6 +108,52 @@ API available at:
 
 ---
 
+## Dashboard 
+
+The dashboard is a modern Vite + Vanilla JavaScript SPA that connects to the FastAPI backend.
+
+### Development
+
+From the `dashboard/` folder:
+
+```bash
+npm install
+npm run dev
+```
+
+Opens dashboard dev server on `http://localhost:5173` with:
+- Hot module replacement (HMR) for instant updates
+- API proxy to `http://localhost:8000` (no CORS issues)
+- Module-based JavaScript organization
+
+### Production Build
+
+```bash
+npm run build
+```
+
+Builds optimized static files to `dashboard/dist/`. FastAPI serves these automatically when you run the server.
+
+### Dashboard Structure
+
+```
+dashboard/
+├── src/
+│   ├── css/main.css        # Styling
+│   └── js/
+│       ├── main.js         # Entry point
+│       ├── api.js          # API calls
+│       ├── render.js       # DOM rendering
+│       └── utils.js        # Helpers
+├── index.html              # Vite template
+├── vite.config.js          # Config
+└── package.json            # Dependencies
+```
+
+See [dashboard/README.md](dashboard/README.md) for more details.
+
+---
+
 ## Customizing for your own use case
 
 Core configuration lives in `config.py`. The most important pieces for customizing are:
