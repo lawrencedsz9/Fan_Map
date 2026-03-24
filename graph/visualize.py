@@ -13,22 +13,22 @@ from pyvis.network import Network
 
 log = logging.getLogger(__name__)
 
-# Color scheme per node type
+# Color scheme per node type - Ghibli Aesthetic
 COLORS = {
-    "Anime": "#ff6b6b",       # Coral red
-    "Character": "#4ecdc4",   # Teal
-    "Platform": "#45b7d1",    # Sky blue
-    "Source": "#96ceb4",      # Sage green
-    "Studio": "#ffeaa7",      # Warm yellow
-    "Unknown": "#dfe6e9",     # Light gray
+    "Anime": "#D4AF37",        # Ghibli Gold
+    "Character": "#E89B7A",    # Ghibli Peach
+    "Platform": "#E89B7A",     # Ghibli Peach
+    "Source": "#6B8E6F",       # Ghibli Forest
+    "Studio": "#9B6B4F",       # Ghibli Brown
+    "Unknown": "#999999",      # Gray
 }
 
 EDGE_COLORS = {
-    "CHARACTER_OF": "#4ecdc4",
-    "MENTIONED_ON": "#74b9ff",
-    "PRODUCED_BY": "#ffeaa7",
-    "SHARES_FANDOM": "#fd79a8",
-    "TRENDING_WITH": "#e17055",
+    "CHARACTER_OF": "#9B6B4F",
+    "MENTIONED_ON": "#6B8E6F",
+    "PRODUCED_BY": "#D4AF37",
+    "SHARES_FANDOM": "#E89B7A",
+    "TRENDING_WITH": "#9B6B4F",
 }
 
 
@@ -40,35 +40,56 @@ def render_graph(G: nx.Graph, output_path: str | Path) -> Path:
     net = Network(
         height="100vh",
         width="100%",
-        bgcolor="#0a0a0a",
-        font_color="#ffffff",
+        bgcolor="#f4f1ea",
+        font_color="#2a2a1e",
         directed=False,
         select_menu=False,
         filter_menu=False,
     )
 
-    # Physics configuration for beautiful layout
+    # Physics configuration for soft, breathing movement (Ghibli aesthetic)
     net.set_options("""
     {
         "physics": {
-            "forceAtlas2Based": {
-                "gravitationalConstant": -80,
-                "centralGravity": 0.008,
-                "springLength": 180,
-                "springConstant": 0.04,
-                "damping": 0.5
+            "barnesHut": {
+                "gravitationalConstant": -2000,
+                "centralGravity": 0.1,
+                "springLength": 150,
+                "damping": 0.09,
+                "avoidOverlap": 0.1
             },
-            "solver": "forceAtlas2Based",
+            "solver": "barnesHut",
             "stabilization": {
-                "iterations": 200
-            }
+                "iterations": 200,
+                "fit": true
+            },
+            "minVelocity": 0.75
         },
         "nodes": {
-            "borderWidth": 2,
-            "borderWidthSelected": 4,
+            "borderWidth": 3,
+            "borderWidthSelected": 5,
+            "color": {
+                "border": "#6B8E6F",
+                "highlight": {
+                    "border": "#D4AF37",
+                    "background": "#E89B7A"
+                }
+            },
             "font": {
                 "size": 14,
-                "face": "monospace"
+                "face": "Fredoka One, monospace",
+                "color": "#2a2a1e",
+                "strokeWidth": 0,
+                "bold": {
+                    "size": 16
+                }
+            },
+            "shadow": {
+                "enabled": true,
+                "color": "rgba(107, 142, 111, 0.2)",
+                "size": 8,
+                "x": 2,
+                "y": 2
             }
         },
         "edges": {
@@ -77,9 +98,16 @@ def render_graph(G: nx.Graph, output_path: str | Path) -> Path:
             },
             "color": {
                 "inherit": false,
-                "opacity": 0.6
+                "opacity": 0.7
             },
-            "width": 1.5
+            "width": 2,
+            "shadow": {
+                "enabled": true,
+                "color": "rgba(107, 142, 111, 0.15)",
+                "size": 4,
+                "x": 1,
+                "y": 1
+            }
         },
         "interaction": {
             "hover": true,
@@ -142,16 +170,20 @@ def render_graph(G: nx.Graph, output_path: str | Path) -> Path:
 
 
 def _inject_custom_styles(html_path: Path) -> None:
-    """Inject dark theme + title bar into the pyvis HTML output."""
+    """Inject Ghibli theme + title bar into the pyvis HTML output."""
     content = html_path.read_text(encoding="utf-8")
 
     custom_css = """
     <style>
         body {
             margin: 0;
-            background: #0a0a0a;
-            font-family: 'Segoe UI', monospace;
+            background: #f4f1ea;
+            font-family: 'Fredoka One', 'Courier New', monospace;
             overflow: hidden;
+            background-image: 
+                url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAA120lEQVQIHWP4z+DwH0ghyMDAwMDAwMDg4ODAf/J/Bv4DAAD//wMCACoBAkcb8sUiYGBg+M/wn4GBgf8/AwMDAwP//xkYGP7/ZwAyGABk/hnIM/xnYPjPwPI/FQOrOgYGBgaGf4wMDg8ZGP4z/GdgYGBg+P+fgYGBgQGZnIGBgQGZhoGBgQGZioGBgQGZhYGBgQGZmYGBgQGZlYGBgQGZn4GBgQGZj4GBgQGZgYGBgQGZiYGBgQGZhYGBgQGZjYGBgQGZjYGBgQGZk4GBgQGZk4GBgQGZj4GBgQGZi4GBgQGZk4GBgQGZjYGBgQGZi4GBgQGZh4GBgQGZi4GBgQGZi4GBgQGZi4GBgQGZi4GBgQGZi4GBgQGZhYGBgQGZhYGBgQGZi4GBgQGZi4GBgQGZi4GBgQGZi4GBgQGZi4GBgQGZi4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4GBgQGZh4HBgQGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYG');
+            background-repeat: repeat;
+            background-size: 2px 2px;
         }
         #title-bar {
             position: fixed;
@@ -159,38 +191,48 @@ def _inject_custom_styles(html_path: Path) -> None:
             left: 0;
             right: 0;
             z-index: 1000;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-            border-bottom: 1px solid #333;
-            padding: 12px 24px;
+            background: linear-gradient(135deg, #6B8E6F 0%, #5a8060 50%, #4a7050 100%);
+            border: 3px solid #6B8E6F;
+            border-bottom: 6px solid #D4AF37;
+            padding: 16px 24px;
             display: flex;
             align-items: center;
             gap: 16px;
+            box-shadow: 0 8px 0px rgba(0, 0, 0, 0.1), inset 0 2px 0px rgba(107, 142, 111, 0.3);
         }
         #title-bar h1 {
-            color: #ff6b6b;
-            font-size: 18px;
+            color: #2a2a1e;
+            font-size: 24px;
             margin: 0;
+            font-weight: 900;
+            text-shadow: 2px 2px 0px rgba(212, 175, 55, 0.3);
+            letter-spacing: 1px;
         }
         #title-bar span {
-            color: #888;
-            font-size: 13px;
+            color: #E89B7A;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
         .pulse {
-            width: 8px;
-            height: 8px;
-            background: #00ff88;
+            width: 10px;
+            height: 10px;
+            background: #D4AF37;
+            border: 2px solid #6B8E6F;
             border-radius: 50%;
-            animation: pulse 2s infinite;
+            animation: gentle-pulse 0.8s ease-in-out infinite;
+            box-shadow: 0 0 6px rgba(212, 175, 55, 0.4);
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
+        @keyframes gentle-pulse {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
         }
     </style>
     <div id="title-bar">
         <div class="pulse"></div>
-        <h1>Fandom Intelligence Graph</h1>
-        <span>Real-Time Internet Attention Map</span>
+        <h1>✦ FANDOM GRAPH ✦</h1>
+        <span>Network Visualization</span>
     </div>
     """
 

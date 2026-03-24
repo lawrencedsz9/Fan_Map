@@ -8,8 +8,9 @@ import logging
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -248,8 +249,20 @@ async def anime_detail(name: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
-    """Serve the main dashboard."""
-    return _get_dashboard_html()
+    """Serve the main dashboard from Vite build output."""
+    from config import BASE_DIR
+    
+    dashboard_dist = BASE_DIR / "dashboard" / "dist" / "index.html"
+    
+    if dashboard_dist.exists():
+        return dashboard_dist.read_text(encoding="utf-8")
+    
+    # Fallback if not built yet
+    return """
+    <h1>Dashboard not built yet</h1>
+    <p>Run <code>npm run build</code> in the dashboard folder to build the Vite project.</p>
+    <p>For development, run <code>npm run dev</code> and access the dashboard on port 5173.</p>
+    """
 
 
 @app.get("/graph", response_class=HTMLResponse)
@@ -262,11 +275,7 @@ async def graph_view():
     return HTMLResponse("<h1>Graph not generated yet. Hit /api/refresh first.</h1>")
 
 
-def _get_dashboard_html() -> str:
-    """Generate the dashboard HTML."""
-    dashboard_path = (
-        Path(__file__).resolve().parent.parent / "dashboard" / "index.html"
-    )
-    if dashboard_path.exists():
-        return dashboard_path.read_text(encoding="utf-8")
-    return "<h1>Dashboard not found</h1>"
+# Mount static files from Vite build
+dashboard_dist_path = Path(__file__).resolve().parent.parent / "dashboard" / "dist"
+if dashboard_dist_path.exists():
+    app.mount("/assets", StaticFiles(directory=str(dashboard_dist_path / "assets")), name="assets")
